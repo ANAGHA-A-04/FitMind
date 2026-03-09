@@ -1,0 +1,241 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "hi",
+        "hello",
+        "hey there",
+        "good morning",
+        "good evening",
+        "what's up",
+        "how are you"
+      ],
+      "responses": [
+        "Hello! I'm FitMind, your wellness companion. How can I help you today?",
+        "Hey there! Ready to support your fitness and mental wellness journey!",
+        "Hi! I'm here to help you with stress, fitness, diet, sleep, and more.",
+        "Hello! How are you feeling today? Let's work on your wellness together."
+      ]
+    },
+    {
+      "tag": "stress",
+      "patterns": [
+        "I feel stressed",
+        "too much stress",
+        "I am under pressure",
+        "I feel mentally tired",
+        "I am overwhelmed",
+        "everything feels too much",
+        "I can't handle the pressure",
+        "my mind won't stop racing"
+      ],
+      "responses": [
+        "Try taking slow, deep breaths for five minutes — inhale for 4 seconds, hold for 4, exhale for 4. It resets your nervous system.",
+        "A short walk outside and some fresh air can dramatically reduce cortisol levels and ease stress.",
+        "Remember: 'You don't have to control your thoughts. You just have to stop letting them control you.' — Dan Millman. Take one step at a time.",
+        "Try the 5-4-3-2-1 grounding technique: name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste. It brings you back to the present.",
+        "Journaling for 10 minutes can help offload mental clutter. Write what's worrying you — it helps your brain process it."
+      ]
+    },
+    {
+      "tag": "motivation",
+      "patterns": [
+        "I feel unmotivated",
+        "I have no energy to do anything",
+        "I need motivation",
+        "I want to give up",
+        "I feel lazy today",
+        "I don't feel like doing anything",
+        "inspire me",
+        "give me a motivational quote"
+      ],
+      "responses": [
+        "'The secret of getting ahead is getting started.' — Mark Twain. Start with just 2 minutes — momentum builds naturally.",
+        "'It does not matter how slowly you go as long as you do not stop.' — Confucius. Keep moving forward, no matter the pace.",
+        "Break your goal into the smallest possible step and do only that today. Progress — however tiny — builds momentum.",
+        "'You are never too old to set another goal or to dream a new dream.' — C.S. Lewis. Today is always a good day to begin.",
+        "Think about your 'why'. Why did you start? Reconnecting with your purpose is the most powerful motivator there is."
+      ]
+    },
+    {
+      "tag": "exercise",
+      "patterns": [
+        "suggest me some exercises",
+        "what workout should I do",
+        "I want to start exercising",
+        "beginner workout plan",
+        "exercises for fitness",
+        "how do I stay active",
+        "home workout ideas",
+        "I want to build a habit of exercise"
+      ],
+      "responses": [
+        "Start with 20 minutes of brisk walking daily — it boosts mood, burns calories, and is sustainable for any fitness level.",
+        "Try this beginner routine: 3 sets of 10 push-ups, 15 squats, 20 jumping jacks, and a 30-second plank. Rest for 60 seconds between sets.",
+        "Yoga is an excellent starting point — it improves flexibility, reduces stress, and builds core strength. Try 15 minutes every morning.",
+        "The best exercise is one you enjoy and will actually do. Try dancing, cycling, swimming, or hiking — fitness should be fun!",
+        "'Take care of your body. It's the only place you have to live.' — Jim Rohn. Even a 10-minute stretch session counts!"
+      ]
+    },
+    {
+      "tag": "diet",
+      "patterns": [
+        "what should I eat",
+        "healthy eating tips",
+        "suggest a healthy diet",
+        "I want to eat better",
+        "nutrition advice",
+        "how to improve my diet",
+        "what foods are good for mental health",
+        "healthy food recommendations"
+      ],
+      "responses": [
+        "Fill half your plate with colorful vegetables, one quarter with lean protein, and one quarter with whole grains. Eat the rainbow!",
+        "Omega-3 rich foods like walnuts, flaxseeds, and salmon are proven to support brain health and reduce anxiety.",
+        "Avoid ultra-processed foods and sugary drinks — they cause blood sugar spikes that can worsen mood and energy levels.",
+        "Try meal prepping on Sundays — preparing healthy meals in advance removes the daily decision fatigue of 'what to eat'.",
+        "'Let food be thy medicine and medicine be thy food.' — Hippocrates. Whole foods are your most powerful daily tool."
+      ]
+    },
+    {
+      "tag": "sleep",
+      "patterns": [
+        "I can't sleep",
+        "how to sleep better",
+        "I have insomnia",
+        "tips for better sleep",
+        "I feel tired all day",
+        "I wake up at night",
+        "I don't get enough sleep",
+        "how to improve sleep quality"
+      ],
+      "responses": [
+        "Keep a consistent sleep schedule — go to bed and wake up at the same time every day, even on weekends. Your circadian rhythm will thank you.",
+        "Avoid screens (phone, TV, laptop) for at least 30 minutes before bed. Blue light suppresses melatonin and delays sleep.",
+        "Try the 4-7-8 breathing method before sleep: inhale for 4 seconds, hold for 7, exhale for 8. It activates your parasympathetic nervous system.",
+        "Keep your bedroom cool (around 18-20°C), dark, and quiet. Your sleep environment is as important as your sleep habits.",
+        "Avoid caffeine after 2 PM. Caffeine has a half-life of 5-6 hours, meaning half of a 3 PM coffee is still in your system at 8 PM."
+      ]
+    },
+    {
+      "tag": "mental_health",
+      "patterns": [
+        "I feel sad",
+        "I am feeling depressed",
+        "I feel anxious",
+        "I am not okay",
+        "how to improve mental health",
+        "I feel lonely",
+        "I am struggling emotionally",
+        "mental health advice"
+      ],
+      "responses": [
+        "It's okay to not be okay. Acknowledging your feelings is the first and bravest step toward healing.",
+        "Daily sunlight exposure for at least 20 minutes significantly boosts serotonin — the brain's natural mood stabilizer.",
+        "Consider speaking to a trusted person in your life. Social connection is one of the strongest buffers against anxiety and depression.",
+        "'You don't have to be positive all the time. It's perfectly okay to feel sad, angry, annoyed, frustrated, or anxious.' — Lori Deschene. Give yourself grace.",
+        "Practice 5 minutes of gratitude daily — write down 3 things you're grateful for. Research shows it rewires the brain toward positivity over time."
+      ]
+    },
+    {
+      "tag": "productivity",
+      "patterns": [
+        "how to be more productive",
+        "I waste too much time",
+        "tips for focus",
+        "how to stop procrastinating",
+        "I can't concentrate",
+        "help me manage my time better",
+        "how to stay focused",
+        "productivity advice"
+      ],
+      "responses": [
+        "Try the Pomodoro Technique: work for 25 minutes, then take a 5-minute break. After 4 cycles, take a longer 20-minute break.",
+        "Remove your phone from your workspace during deep work sessions. Even its presence — face down — reduces cognitive capacity.",
+        "'You don't rise to the level of your goals, you fall to the level of your systems.' — James Clear. Build strong daily routines.",
+        "Start your day with your ONE most important task before checking emails or social media. Protect your peak mental hours.",
+        "The 2-minute rule: if a task takes less than 2 minutes, do it immediately. This eliminates small tasks from piling up."
+      ]
+    },
+    {
+      "tag": "hydration",
+      "patterns": [
+        "how much water should I drink",
+        "hydration tips",
+        "I forget to drink water",
+        "why is water important",
+        "I feel dehydrated",
+        "drinking water benefits",
+        "how to drink more water",
+        "remind me to hydrate"
+      ],
+      "responses": [
+        "Aim for 8 glasses (about 2 liters) of water per day. Your exact needs vary with activity level, climate, and body size.",
+        "A simple trick: drink one full glass of water immediately after waking up. It rehydrates your body after hours of sleep.",
+        "Even mild dehydration of just 1-2% can impair concentration, mood, and short-term memory. Keep a bottle at your desk!",
+        "Try setting hourly reminders on your phone or use a marked water bottle to track your intake throughout the day.",
+        "Eating water-rich foods like cucumbers, watermelon, oranges, and strawberries also contributes significantly to your daily hydration."
+      ]
+    },
+    {
+      "tag": "breathing",
+      "patterns": [
+        "breathing exercises",
+        "how to calm down quickly",
+        "I need to relax now",
+        "breathing techniques for anxiety",
+        "how to control breathing",
+        "help me breathe better",
+        "panic attack help",
+        "I feel like I can't breathe"
+      ],
+      "responses": [
+        "Try box breathing: inhale for 4 counts, hold for 4, exhale for 4, hold for 4. Repeat 4–5 times. It's used by elite athletes and military personnel.",
+        "Diaphragmatic breathing: place one hand on your chest and one on your belly. Breathe so only your belly rises. This activates deep relaxation.",
+        "The 4-7-8 technique is excellent for acute anxiety: inhale for 4, hold for 7, exhale slowly for 8. Do this 3–4 times.",
+        "Alternate nostril breathing (from yoga) balances the nervous system: close your right nostril, inhale left, then switch and exhale right.",
+        "Simply slow down your exhale — make it longer than your inhale. A slow exhale activates the vagus nerve and triggers calmness."
+      ]
+    },
+    {
+      "tag": "stories",
+      "patterns": [
+        "tell me a short story",
+        "share an inspirational story",
+        "motivate me with a story",
+        "give me a wellness story",
+        "I need an inspiring story",
+        "tell me something inspiring",
+        "share a story about perseverance",
+        "tell me a story about mental strength"
+      ],
+      "responses": [
+        "🌱 The Bamboo Tree: A farmer planted a bamboo seed and watered it every day. For five years, nothing appeared above the ground. Then in the sixth year, the bamboo grew 90 feet in just six weeks. The roots had been silently growing underground the whole time. Your efforts are never wasted — your roots are growing even when you can't see it.",
+        "🏋️ The Doubted Champion: A young girl told her school coach she wanted to run in the Olympics. He laughed and said she was too slow. She went home, trained every single morning before sunrise for four years — alone, without a coach, without applause. She won gold. The lesson: your biggest supporter only needs to be you.",
+        "🪨 The Cracked Pot: A woman carried two pots of water from a river each day. One pot was cracked and always arrived half empty. The cracked pot felt ashamed. But the woman said: 'Notice the flowers on your side of the path? I planted seeds there because I knew you would water them every day.' Your imperfections are quietly creating beauty you haven't seen yet.",
+        "🦋 The Butterfly's Struggle: A boy watched a butterfly struggle to break free from its cocoon. To help, he cut it open. The butterfly emerged easily — but its wings were weak and it never flew. The struggle was what would have strengthened its wings. Every hard moment in your life is building the strength you need to fly.",
+        "⛵ The Lighthouse Keeper: A lighthouse keeper was asked why he kept the light burning even on calm nights with no ships at sea. He replied: 'I don't light it for the ships I can see. I light it for the ships I cannot.' Be consistent in your good habits even on days you feel they don't matter — you never know who or what you are guiding.",
+        "🌊 The Surfer's Mindset: A surfer coach once told a student who feared big waves: 'You can't stop the waves, but you can learn to surf.' The student practiced for months, falling every single time. One morning, he rode the biggest wave on the beach. He didn't control the ocean — he mastered himself. You cannot control life's storms, but you can train your mind to ride them."
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "bye",
+        "goodbye",
+        "see you later",
+        "that's all for now",
+        "thanks bye",
+        "I'm done",
+        "take care"
+      ],
+      "responses": [
+        "Take care of yourself! Remember — small daily habits build extraordinary lives. See you soon!",
+        "Goodbye! Stay hydrated, keep moving, and be kind to yourself.",
+        "See you later! Keep up the great work on your wellness journey.",
+        "Bye! Remember: your health is your greatest wealth. Until next time!"
+      ]
+    }
+  ]
+}

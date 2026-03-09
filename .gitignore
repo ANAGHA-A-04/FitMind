@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# FitMind Python Chatbot — generated files (teammates must run train_model.py locally)
+fitmind_chatbot/model.pkl
+fitmind_chatbot/vectorizer.pkl
+fitmind_chatbot/__pycache__/
+fitmind_chatbot/*.pyc
+
+# Python virtual environment (if created inside project)
+fitmind_chatbot/venv/
+fitmind_chatbot/.env

@@ -40,7 +40,7 @@ const userschema = new mongoose.Schema ({
         enum:["lose weight","gain muscle","maintain fitness"],
 
     }
-    userSchema.pre('save',async function(next){
+    userschema.pre('save',async function(next){
         if(!this.isModified('password')){
             return next();
         }   
@@ -51,7 +51,8 @@ const userschema = new mongoose.Schema ({
         }        catch(err){
             next(err);
         }
+    });
 
 
-})
+});
 module.exports=mongoose.model('User',userschema);
