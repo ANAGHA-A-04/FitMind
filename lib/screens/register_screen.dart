@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -279,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   }
 
-  void _registerUser() {
+  void _registerUser() async {
     if (_formKey.currentState!.validate()) {
       if (selectedDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -288,17 +289,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("Registration Successful!")),
-    );
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
 
-    Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-    builder: (context) => LoginScreen(),
-    ),
-    );
+      try {
+        // Format date to ISO 8601 string
+        final dateString = selectedDate!.toIso8601String();
+
+        // Call API
+        final result = await AuthService.register(
+          name: nameController.text.trim(),
+          email: emailController.text.trim(),
+          password: passwordController.text,
+          weight: double.parse(weightController.text),
+          height: double.parse(heightController.text),
+          dateOfBirth: dateString,
+          goal: selectedGoal,
+        );
+
+        // Close loading indicator
+        if (mounted) Navigator.pop(context);
+
+        if (result['success'] == true) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Registration Successful!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            // Navigate to login screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LoginScreen(),
+              ),
+            );
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Registration failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Close loading indicator
+        if (mounted) Navigator.pop(context);
+
+        // Show error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
-
   }
 }

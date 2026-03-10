@@ -1,58 +1,63 @@
-const mongoose = require ('mongoose');
-const bcrypt =require('bcrypt');
-const userschema = new mongoose.Schema ({
-    name:{
-        required:[true,"Name is required"],
-        type:String,
-        
-    },
-    password:{
-        required:[true,"password is required"],
-        type:String,
-        minLength:[6,"'password must be at least 6 characters"],
-        select:false,
-        
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, "Name is required"],
+        trim: true
     },
-    email:{
-        type:String,
-        required:[true,"email is required"],
-        unique:true,
-        trim:true,
-        lowercase:true,
-        match:[/^\S+@\S+\.\S+$/, "Please enter a valid email"],
+    email: {
+        type: String,
+        required: [true, "Email is required"],
+        unique: true,
+        trim: true,
+        lowercase: true,
+        match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"]
     },
-    weight:{
-        type:Number,
-        required:[true,"weight is required"],
+    password: {
+        type: String,
+        required: [true, "Password is required"],
+        minLength: [6, "Password must be at least 6 characters"],
+        select: false
     },
-    height:{
-        type:Number,
-        required:[true,"height is required"],
+    weight: {
+        type: Number,
+        required: [true, "Weight is required"]
     },
-    dateOfBirth:{
-        type:Date,
-        required:[true,"date of birth is required"],
+    height: {
+        type: Number,
+        required: [true, "Height is required"]
     },
-    goal:{
-        type:String,
-        required:[true,"goal is required"],
-        enum:["lose weight","gain muscle","maintain fitness"],
-
+    dateOfBirth: {
+        type: Date,
+        required: [true, "Date of birth is required"]
+    },
+    goal: {
+        type: String,
+        required: [true, "Goal is required"],
+        enum: ["lose weight", "gain muscle", "maintain fitness"]
     }
-    userschema.pre('save',async function(next){
-        if(!this.isModified('password')){
-            return next();
-        }   
-        try{
-            const salt = await bcrypt.genSalt(10);
-            this.password = await bcrypt.hash(this.password,salt);
-            next();
-        }        catch(err){
-            next(err);
-        }
-    });
-
-
+}, {
+    timestamps: true
 });
-module.exports=mongoose.model('User',userschema);
+
+// Hash password before saving
+userSchema.pre('save', async function() {
+    if (!this.isModified('password')) {
+        return;
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Method to compare passwords
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (err) {
+        throw err;
+    }
+};
+
+module.exports = mongoose.model('User', userSchema);
