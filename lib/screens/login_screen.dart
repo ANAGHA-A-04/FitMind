@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
+import 'home_screen.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -139,8 +140,13 @@ class LoginScreen extends StatelessWidget {
                             ),
                           );
 
-                          // TODO: Navigate to home screen
-                          // For now, just show success
+                          // Navigate to home screen with bottom navigation
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const HomeScreen(),
+                            ),
+                          );
                         }
                       } else {
                         // Show error message
