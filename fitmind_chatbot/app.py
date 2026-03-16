@@ -90,10 +90,10 @@ def health_check():
 if __name__ == "__main__":
     print("\n" + "=" * 55)
     print("  FitMind Wellness Chatbot API")
-    print("  Running at: http://127.0.0.1:5000")
+    print("  Running at: http://127.0.0.1:5001")
     print("  Endpoint  : POST /chat")
     print("=" * 55 + "\n")
 
     # debug=False for production-like behaviour.
     # host="0.0.0.0" makes the server reachable from the device running Flutter.
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
