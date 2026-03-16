@@ -41,6 +41,10 @@ dependencies:
   # Local storage for tokens
   shared_preferences: ^2.2.2
 
+  # step counter sensor
+  pedometer: ^4.0.1
+  permission_handler: ^11.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

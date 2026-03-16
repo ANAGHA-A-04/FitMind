@@ -1,105 +1,152 @@
 import 'package:flutter/material.dart';
-import 'map_page.dart';
-import 'chat_page.dart';
-import 'dashboard_page.dart';
+import '../services/step_service.dart';
+import '../widgets/mood_card.dart';
+import '../widgets/step_progress.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+
+  final String mood;
+  final double sleep;
+  final double stress;
+
+  const HomeScreen({
+    super.key,
+    required this.mood,
+    required this.sleep,
+    required this.stress,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const MapPage(),
-    const ChatPage(),
-    const DashboardPage(),
-  ];
+  int steps = 0;
+  int? initialSteps;
+  final StepService stepService = StepService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    stepService.startStepCounter((stepCount) {
+      if (initialSteps ==null){
+        initialSteps =stepCount;
+      }
+      setState(() {
+        steps = stepCount-initialSteps!;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    stepService.stopStepCounter();
+    super.dispose();
+  }
+
+  // WELLNESS SCORE CALCULATION
+  double calculateWellness() {
+
+    double sleepScore = (widget.sleep / 8) * 40;
+    double stressScore = (10 - widget.stress) * 3;
+    double stepScore = (steps / 10000) * 30;
+
+    double total = sleepScore + stressScore + stepScore;
+
+    if (total > 100) {
+      total = 100;
+    }
+
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
+
+    double wellnessScore = calculateWellness();
+
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0A3A2A),
-          border: Border(
-            top: BorderSide(
-              color: const Color(0xFF00FF94).withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  icon: Icons.map,
-                  label: 'Map',
-                  index: 0,
-                ),
-                _buildNavItem(
-                  icon: Icons.chat_bubble,
-                  label: 'Chat',
-                  index: 1,
-                ),
-                _buildNavItem(
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
-                  index: 2,
-                ),
-              ],
-            ),
-          ),
+      backgroundColor: const Color(0xFF000000),
+
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "FitMind",
+          style: TextStyle(fontWeight: FontWeight.bold,
+          color: Colors.white,
+          fontSize: 22,),
         ),
       ),
-    );
-  }
 
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-  }) {
-    bool isActive = _currentIndex == index;
+      body: Padding(
+        padding: const EdgeInsets.all(20),
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFF00FF94).withOpacity(0.2)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isActive ? const Color(0xFF00FF94) : Colors.white54,
-              size: 28,
+
+            // STEP PROGRESS
+            StepProgress(steps: steps),
+
+            const SizedBox(height: 30),
+
+            // WELLNESS + MOOD CARDS
+            Row(
+              children: [
+
+                Expanded(
+                  child: MoodCard(
+                    emoji: "Wellness",
+                    label: "${wellnessScore.toStringAsFixed(0)}/100",
+                    onTap: () {},
+                  ),
+                ),
+
+                const SizedBox(width: 15),
+
+                Expanded(
+                  child: MoodCard(
+                    emoji: widget.mood,
+                    label: "Today's Mood",
+                    onTap: () {},
+                  ),
+                ),
+
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? const Color(0xFF00FF94) : Colors.white54,
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+
+            const SizedBox(height: 30),
+
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Weekly Activity",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white
+                ),
               ),
             ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: const Color(0xFF132520),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Center(
+                child: Text(
+                  "Weekly Graph shows here",
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ),
+            )
+
           ],
         ),
       ),

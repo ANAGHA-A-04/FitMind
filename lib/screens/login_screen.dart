@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
 import '../services/auth_service.dart';
+import 'checkin_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
@@ -140,11 +140,11 @@ class LoginScreen extends StatelessWidget {
                             ),
                           );
 
-                          // Navigate to home screen with bottom navigation
+                          // TODO: Navigate to Daily check-in page
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const HomeScreen(),
+                                builder: (context)=> CheckInScreen(),
                             ),
                           );
                         }
