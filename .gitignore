@@ -53,3 +53,8 @@ fitmind_chatbot/*.pyc
 # Python virtual environment (if created inside project)
 fitmind_chatbot/venv/
 fitmind_chatbot/.env
+
+# ML models
+models/
+*.h5
+*.keras
