@@ -45,22 +45,33 @@ def build_model(num_classes, image_size=(224, 224)):
 
     # Data augmentation
     x = layers.RandomFlip("horizontal")(x)
-    x = layers.RandomRotation(0.05)(x)
+    x = layers.RandomRotation(0.1)(x)
+    x = layers.RandomZoom(0.15)(x)
 
-    # CNN layers
-    x = layers.Conv2D(32, 3, padding="same", activation="relu")(x)
+    # Block 1
+    x = layers.Conv2D(32, (3, 3), padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(32, (3, 3), activation="relu")(x)
+    x = layers.MaxPooling2D()(x)
+
+    # Block 2
+    x = layers.Conv2D(64, (3, 3), padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(64, (3, 3), activation="relu")(x)
+    x = layers.MaxPooling2D()(x)
+
+    # Block 3
+    x = layers.Conv2D(128, (3, 3), padding="same", activation="relu")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(128, (3, 3), activation="relu")(x)
+    x = layers.MaxPooling2D()(x)
+
+    # Block 4
+    x = layers.Conv2D(256, (3, 3), padding="same", activation="relu")(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D()(x)
 
-    x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling2D()(x)
-
-    x = layers.Conv2D(128, 3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling2D()(x)
-
-    x = layers.Flatten()(x)
+    x = layers.GlobalAveragePooling2D()(x)
 
     x = layers.Dense(256, activation="relu")(x)
     x = layers.Dropout(0.5)(x)
@@ -89,7 +100,6 @@ def main():
     args = parser.parse_args()
 
     # Resolve dataset paths
-
     if args.train and args.test:
         train_dir = Path(args.train)
         test_dir = Path(args.test)
@@ -129,14 +139,27 @@ def main():
     )
 
     log_dir = Path(args.output) / datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
     log_dir.mkdir(parents=True, exist_ok=True)
 
     callbacks = [
 
         keras.callbacks.ModelCheckpoint(
             str(log_dir / "best_model.keras"),
-            save_best_only=True
+            save_best_only=True,
+            monitor="val_accuracy"
+        ),
+
+        keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            patience=5,
+            restore_best_weights=True
+        ),
+
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.3,
+            patience=3,
+            min_lr=1e-6
         ),
 
         keras.callbacks.TensorBoard(
@@ -152,13 +175,10 @@ def main():
     )
 
     # Save final model
-
     final_path = log_dir / "final_model.keras"
-
     model.save(final_path)
 
     # Save class names
-
     with open(log_dir / "class_names.txt", "w", encoding="utf-8") as f:
         for c in class_names:
             f.write(c + "\n")
