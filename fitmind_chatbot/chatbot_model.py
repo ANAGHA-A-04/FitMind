@@ -1,14 +1,10 @@
-# =============================================================================
-# chatbot_model.py
-# FitMind – AI Driven Fitness and Mental Wellness System
-# -----------------------------------------------------------------------------
+
 # Purpose:
 #   This module contains:
 #     1. Text preprocessing functions
 #     2. The chatbot response function (loads model, predicts intent, returns reply)
 #
 # AI Approach: TF-IDF + Logistic Regression (classic NLP — no external AI APIs)
-# =============================================================================
 
 import re
 import json
