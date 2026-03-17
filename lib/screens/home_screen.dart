@@ -8,12 +8,14 @@ class HomeScreen extends StatefulWidget {
   final String mood;
   final double sleep;
   final double stress;
+  final int steps;
 
   const HomeScreen({
     super.key,
     required this.mood,
     required this.sleep,
     required this.stress,
+    required this.steps,
   });
 
   @override
@@ -21,9 +23,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int steps = 0;
-  int? initialSteps;
   final StepService stepService = StepService();
 
   @override
@@ -31,11 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     stepService.startStepCounter((stepCount) {
-      if (initialSteps ==null){
-        initialSteps =stepCount;
-      }
       setState(() {
-        steps = stepCount-initialSteps!;
+        steps = stepCount;
       });
     });
   }
@@ -46,12 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+
+
+
+
   // WELLNESS SCORE CALCULATION
   double calculateWellness() {
 
     double sleepScore = (widget.sleep / 8) * 40;
     double stressScore = (10 - widget.stress) * 3;
-    double stepScore = (steps / 10000) * 30;
+    double stepScore = (steps / 1000) * 30;
 
     double total = sleepScore + stressScore + stepScore;
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/step_service.dart';
 import '../models/checkin_model.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'home_screen.dart';
 
 class CheckInScreen extends StatefulWidget {
@@ -24,9 +25,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Start pedometer
+    requestPermission();
+  }
+  void requestPermission() async {
+    PermissionStatus status= await Permission.activityRecognition.request();
+    if (status.isGranted){
     stepService.startStepCounter((stepCount) {
+      print("sensor total steps: $stepCount");
 
       if (initialSteps == null) {
         initialSteps = stepCount; // store first sensor value
@@ -38,6 +43,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
     });
   }
+     else {
+      print("Activity permission denied");
+    }
+    }
   @override
   void dispose() {
     stepService.stopStepCounter();
@@ -111,6 +120,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           mood:selectedMood,
           sleep:sleepHours,
           stress:stressLevel,
+          steps: steps,
         ),
       ),
     );
