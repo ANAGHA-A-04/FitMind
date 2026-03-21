@@ -1,15 +1,17 @@
 from sklearn.ensemble import RandomForestClassifier
+import os
 import joblib
-
-from fitmind_chatbot.train_model import model
 from preprocess import load_and_preprocess
 
 #load data
 df = load_and_preprocess()
 
+#ensure the model directory exists
+os.makedirs("model", exist_ok=True)
+
 #features and labels
 x = df[['steps','sleep','stress','mood']]
-y = df[['label']]
+y = df['label']
 
 #train model
 model =RandomForestClassifier(n_estimators=100)

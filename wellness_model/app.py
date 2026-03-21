@@ -7,7 +7,7 @@ app = Flask(__name__)
 def home():
     return "Mental wellness api running"
 
-@app.route('/predict', method=['post'])
+@app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
 
