@@ -15,6 +15,7 @@ class StepService {
 
       _stepSubscription = Pedometer.stepCountStream.listen(
             (StepCount event) {
+              print("sensor steps: ${event.steps}");
           onStepUpdate(event.steps);
         },
         onError: (error) {
