@@ -58,3 +58,20 @@ fitmind_chatbot/.env
 models/
 *.h5
 *.keras
+/android/
+
+# ML models
+*.pkl
+*.joblib
+
+# datasets
+*.csv
+
+# memory dumps
+*.hprof
+
+
+# Flutter / build
+build/
+.dart_tool/
+.gradle/

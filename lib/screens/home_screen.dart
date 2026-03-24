@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import '../services/step_service.dart';
 import '../widgets/mood_card.dart';
 import '../widgets/step_progress.dart';
+import '../services/health_service.dart';
 
 class HomeScreen extends StatefulWidget {
-
   final String mood;
   final double sleep;
   final double stress;
+  final int steps; // steps from HealthService
 
   const HomeScreen({
     super.key,
     required this.mood,
     required this.sleep,
     required this.stress,
+    required this.steps,
   });
 
   @override
@@ -21,34 +22,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-  int steps = 0;
-  int? initialSteps;
-  final StepService stepService = StepService();
+  late int steps;
 
   @override
   void initState() {
     super.initState();
-
-    stepService.startStepCounter((stepCount) {
-      if (initialSteps ==null){
-        initialSteps =stepCount;
-      }
-      setState(() {
-        steps = stepCount-initialSteps!;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    stepService.stopStepCounter();
-    super.dispose();
+    steps = widget.steps;// ✅ directly use today's steps
+    print("HOME RECEIVED STEPS: ${widget.steps}");
   }
 
   // WELLNESS SCORE CALCULATION
   double calculateWellness() {
-
     double sleepScore = (widget.sleep / 8) * 40;
     double stressScore = (10 - widget.stress) * 3;
     double stepScore = (steps / 10000) * 30;
@@ -64,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     double wellnessScore = calculateWellness();
 
     return Scaffold(
@@ -75,9 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         title: const Text(
           "FitMind",
-          style: TextStyle(fontWeight: FontWeight.bold,
-          color: Colors.white,
-          fontSize: 22,),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
+          ),
         ),
       ),
 
@@ -87,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
 
-            // STEP PROGRESS
+            // ✅ STEP PROGRESS (now shows correct today steps)
             StepProgress(steps: steps),
 
             const SizedBox(height: 30),
