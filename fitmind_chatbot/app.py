@@ -1,7 +1,4 @@
-# =============================================================================
-# app.py
-# FitMind – AI Driven Fitness and Mental Wellness System
-# -----------------------------------------------------------------------------
+
 # Purpose:
 #   Flask REST API server that exposes the chatbot as an HTTP endpoint.
 #
@@ -16,20 +13,15 @@
 #   1. pip install -r requirements.txt
 #   2. python train_model.py          ← must be run first to create model files
 #   3. python app.py                  ← starts the server on port 5000
-# =============================================================================
+
 
 from flask import Flask, request, jsonify
 from chatbot_model import chatbot_response
 
-# --------------------------------------------------------------------------
-# Flask application instance
-# --------------------------------------------------------------------------
+
 app = Flask(__name__)
 
 
-# =============================================================================
-# STEP 8 — POST /chat  ENDPOINT
-# =============================================================================
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -67,10 +59,7 @@ def chat():
     return jsonify({"reply": reply}), 200
 
 
-# =============================================================================
-# HEALTH-CHECK ENDPOINT
-# =============================================================================
-# Useful for confirming the server is running from a browser or curl.
+
 
 @app.route("/", methods=["GET"])
 def health_check():
@@ -83,9 +72,6 @@ def health_check():
     }), 200
 
 
-# =============================================================================
-# ENTRY POINT
-# =============================================================================
 
 if __name__ == "__main__":
     print("\n" + "=" * 55)
