@@ -20,10 +20,17 @@ class _CheckInScreenState extends State<CheckInScreen> {
   bool isLoadingSteps = true; // ✅ important
 
   final HealthService healthService = HealthService();
+  Future<void> testStepFetch() async {
+    print("Testing step fetch...");
+    HealthService testService = HealthService();
+    int testSteps = await testService.getTodaySteps();
+    print("Test steps result: $testSteps");
+  }
 
   @override
   void initState() {
     super.initState();
+    testStepFetch();
     loadSteps();
   }
 

@@ -58,7 +58,6 @@ fitmind_chatbot/.env
 models/
 *.h5
 *.keras
-/android/
 
 # ML models
 *.pkl
