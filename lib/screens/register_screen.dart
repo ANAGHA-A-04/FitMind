@@ -141,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Fitness Goal
             DropdownButtonFormField<String>(
-              value: selectedGoal,
+              initialValue: selectedGoal,
               dropdownColor: Colors.blue[800],
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(

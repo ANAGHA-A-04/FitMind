@@ -5,7 +5,7 @@ import '../models/checkin_model.dart';
 class ApiService {
 
   // Change this to your computer IP
-  static const String baseUrl = "http://10.164.84.220:5000/api";
+  static const String baseUrl = "http://192.168.0.104:5000/api";
 
   // Send daily check-in data to backend
   static Future<bool> saveCheckIn(CheckInModel checkin) async {

@@ -1,4 +1,3 @@
-import '../models/checkin_model.dart';
 class CheckInModel {
   final int steps;
   final double sleepHours;

@@ -28,9 +28,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     // Start pedometer
     stepService.startStepCounter((stepCount) {
 
-      if (initialSteps == null) {
-        initialSteps = stepCount; // store first sensor value
-      }
+      initialSteps ??= stepCount;
 
       setState(() {
         steps = stepCount - initialSteps!;
@@ -111,6 +109,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           mood:selectedMood,
           sleep:sleepHours,
           stress:stressLevel,
+          steps:steps,
         ),
       ),
     );

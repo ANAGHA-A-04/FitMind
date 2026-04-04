@@ -55,7 +55,6 @@ fitmind_chatbot/venv/
 fitmind_chatbot/.env
 
 # ML models
-models/
 *.h5
 *.keras
 
@@ -88,3 +87,19 @@ env/
 # Temp / uploads
 uploads/
 temp/
+# ML models
+*.pkl
+*.joblib
+
+# datasets
+*.csv
+
+# memory dumps
+*.hprof
+
+
+# Flutter / build
+build/
+.dart_tool/
+.gradle/
+

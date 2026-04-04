@@ -6,6 +6,8 @@ void main() {
 }
 
 class FitMindApp extends StatelessWidget {
+  const FitMindApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

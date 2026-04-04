@@ -6,7 +6,7 @@ class MoodCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  MoodCard({required this.emoji, required this.label, required this.onTap});
+  const MoodCard({super.key, required this.emoji, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
