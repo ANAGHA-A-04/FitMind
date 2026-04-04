@@ -257,7 +257,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ),
                 child: const Text("Submit Check-in"),
               ),
-            )
+            ),
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () async {
+                print("TEST BUTTON CLICKED");
+                await HealthService().getTodaySteps();
+              },
+              child: const Text("Test Permission"),
+            ),
           ],
         ),
       ),

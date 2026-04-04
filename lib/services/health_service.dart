@@ -5,29 +5,30 @@ class HealthService {
 
   Future<int> getTodaySteps() async {
     try {
-      // For Android 15, we need to use Health Connect
-      // Request permissions
+      final types = [HealthDataType.STEPS];
+
       bool granted = await health.requestAuthorization(
-        [HealthDataType.STEPS],
+        types,
         permissions: [HealthDataAccess.READ],
       );
 
+      print("Authorization granted: $granted");
+
       if (!granted) {
-        print("Permission not granted");
         return 0;
       }
 
-      // Get today's steps
       DateTime now = DateTime.now();
       DateTime startOfDay = DateTime(now.year, now.month, now.day);
 
       int? steps = await health.getTotalStepsInInterval(startOfDay, now);
 
       print("Today's steps: $steps");
+
       return steps ?? 0;
 
     } catch (e) {
-      print("Error: $e");
+      print("Health Error: $e");
       return 0;
     }
   }
