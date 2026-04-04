@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/mood_card.dart';
 import '../widgets/step_progress.dart';
 import '../services/health_service.dart';
+import 'chat_page.dart';
 
 class HomeScreen extends StatefulWidget {
   final String mood;
@@ -52,6 +53,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatPage()),
+          );
+        },
+        backgroundColor: const Color(0xFF00FF94),
+        child: const Icon(Icons.psychology, color: Colors.white, size: 28),
+      ),
 
       appBar: AppBar(
         backgroundColor: Colors.transparent,

@@ -109,6 +109,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           mood:selectedMood,
           sleep:sleepHours,
           stress:stressLevel,
+          steps:steps,
         ),
       ),
     );
