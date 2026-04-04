@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({Key? key}) : super(key: key);
+  const DashboardPage({super.key});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -435,7 +435,7 @@ class _DashboardPageState extends State<DashboardPage> {
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.white.withOpacity(0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00BFFFF)),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xff00bffff)),
               minHeight: 12,
             ),
           ),

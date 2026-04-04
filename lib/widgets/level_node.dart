@@ -7,11 +7,11 @@ class LevelNode extends StatelessWidget {
   final bool isOnRight;
 
   const LevelNode({
-    Key? key,
+    super.key,
     required this.level,
     this.onTap,
     this.isOnRight = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

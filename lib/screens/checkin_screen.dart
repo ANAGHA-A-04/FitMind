@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../services/step_service.dart';
 import '../models/checkin_model.dart';
 import 'home_screen.dart';
-import '../services/health_service.dart';
 
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
@@ -17,44 +17,32 @@ class _CheckInScreenState extends State<CheckInScreen> {
   double stressLevel = 5;
 
   int steps = 0;
-  bool isLoadingSteps = true; // ✅ important
+  int? initialSteps;
 
-  final HealthService healthService = HealthService();
-  Future<void> testStepFetch() async {
-    print("Testing step fetch...");
-    HealthService testService = HealthService();
-    int testSteps = await testService.getTodaySteps();
-    print("Test steps result: $testSteps");
-  }
+  final StepService stepService = StepService();
 
   @override
   void initState() {
     super.initState();
-    testStepFetch();
-    loadSteps();
-  }
 
-  // ✅ GET TODAY STEPS
-  Future<void> loadSteps() async {
-    try {
-      int todaySteps = await healthService.getTodaySteps();
+    // Start pedometer
+    stepService.startStepCounter((stepCount) {
+
+      initialSteps ??= stepCount;
 
       setState(() {
-        steps = todaySteps;
-        isLoadingSteps = false;
+        steps = stepCount - initialSteps!;
       });
 
-      print("Today's Steps (Health): $steps");
-
-    } catch (e) {
-      print("Error fetching steps: $e");
-      setState(() {
-        isLoadingSteps = false;
-      });
-    }
+    });
+  }
+  @override
+  void dispose() {
+    stepService.stopStepCounter();
+    super.dispose();
   }
 
-  // ✅ MOOD BUTTON
+
   Widget moodButton(String mood, String emoji) {
     return GestureDetector(
       onTap: () {
@@ -86,29 +74,26 @@ class _CheckInScreenState extends State<CheckInScreen> {
     );
   }
 
-  // ✅ SUBMIT CHECK-IN
   void submitCheckIn() {
-    print("BUTTON CLICKED, steps: $steps, loading: $isLoadingSteps");
+
     if (selectedMood.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select your mood")),
       );
       return;
     }
-    if (isLoadingSteps) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Loading steps... please wait")),
-      );
-      return;
-    }
-    print("FINAL Steps Sent: $steps");
+
+    print("Mood: $selectedMood");
+    print("Sleep: $sleepHours");
+    print("Stress: $stressLevel");
+    print("Steps Today: $steps");
 
     CheckInModel checkIn = CheckInModel(
       mood: selectedMood,
       sleepHours: sleepHours,
       stressLevel: stressLevel,
       steps: steps,
-       date: DateTime.now(),
+      date: DateTime.now(),
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -121,10 +106,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => HomeScreen(
-          mood: selectedMood,
-          sleep: sleepHours,
-          stress: stressLevel,
-          steps: steps, // ✅ CORRECT VALUE PASSED
+          mood:selectedMood,
+          sleep:sleepHours,
+          stress:stressLevel,
+          steps:steps,
         ),
       ),
     );
@@ -170,9 +155,10 @@ class _CheckInScreenState extends State<CheckInScreen> {
             const SizedBox(height: 15),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 moodButton("Sad", "😔"),
+                moodButton("Stressed", "😫"),
               ],
             ),
 
@@ -231,12 +217,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
             const SizedBox(height: 10),
 
-            isLoadingSteps
-                ? const Text(
-              "Fetching steps...",
-              style: TextStyle(color: Colors.white),
-            )
-                : Text(
+            Text(
               "$steps steps",
               style: const TextStyle(
                 fontSize: 26,
@@ -251,7 +232,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: isLoadingSteps ? null : submitCheckIn,
+                onPressed: submitCheckIn,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),
