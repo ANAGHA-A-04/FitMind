@@ -4,34 +4,30 @@ class HealthService {
   final Health health = Health();
 
   Future<int> getTodaySteps() async {
-    final now = DateTime.now();
-    final midnight = DateTime(now.year, now.month, now.day);
-
-    print("🚀 HealthService called");
-
-    await health.configure();
-
-    // 🔥 FORCE OPEN PERMISSION SCREEN
-    bool requested = await health.requestAuthorization(
-      [HealthDataType.STEPS],
-      permissions: [HealthDataAccess.READ],
-    );
-
-    print("Permission result: $requested");
-
-    if (!requested) {
-      print("❌ Permission NOT granted");
-      return 0;
-    }
-
     try {
-      int? steps = await health.getTotalStepsInInterval(midnight, now);
+      // For Android 15, we need to use Health Connect
+      // Request permissions
+      bool granted = await health.requestAuthorization(
+        [HealthDataType.STEPS],
+        permissions: [HealthDataAccess.READ],
+      );
 
-      print("✅ TODAY STEPS (API): $steps");
+      if (!granted) {
+        print("Permission not granted");
+        return 0;
+      }
 
+      // Get today's steps
+      DateTime now = DateTime.now();
+      DateTime startOfDay = DateTime(now.year, now.month, now.day);
+
+      int? steps = await health.getTotalStepsInInterval(startOfDay, now);
+
+      print("Today's steps: $steps");
       return steps ?? 0;
+
     } catch (e) {
-      print("❌ Error: $e");
+      print("Error: $e");
       return 0;
     }
   }

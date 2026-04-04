@@ -55,10 +55,8 @@ fitmind_chatbot/venv/
 fitmind_chatbot/.env
 
 # ML models
-models/
 *.h5
 *.keras
-/android/
 
 # ML models
 *.pkl

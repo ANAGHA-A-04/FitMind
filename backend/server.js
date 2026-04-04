@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('http://10.184.213.220:5000/api/auth', require('./routes/auth'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
