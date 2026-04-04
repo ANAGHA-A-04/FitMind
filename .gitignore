@@ -58,6 +58,35 @@ fitmind_chatbot/.env
 *.h5
 *.keras
 
+# Secrets
+.env
+.env.*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VS Code
+.vscode/
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Python extra
+__pycache__/
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+
+# Temp / uploads
+uploads/
+temp/
 # ML models
 *.pkl
 *.joblib
@@ -73,3 +102,4 @@ fitmind_chatbot/.env
 build/
 .dart_tool/
 .gradle/
+
