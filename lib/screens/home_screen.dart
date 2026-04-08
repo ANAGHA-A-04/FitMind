@@ -9,6 +9,7 @@ class HomeScreen extends StatefulWidget {
   final double sleep;
   final double stress;
   final int steps; // steps from HealthService
+  final String predictedWellness;
 
   const HomeScreen({
     super.key,
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
     required this.sleep,
     required this.stress,
     required this.steps,
+    required this.predictedWellness,
   });
 
   @override
@@ -32,24 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
     print("HOME RECEIVED STEPS: ${widget.steps}");
   }
 
-  // WELLNESS SCORE CALCULATION
-  double calculateWellness() {
-    double sleepScore = (widget.sleep / 8) * 40;
-    double stressScore = (10 - widget.stress) * 3;
-    double stepScore = (steps / 10000) * 30;
-
-    double total = sleepScore + stressScore + stepScore;
-
-    if (total > 100) {
-      total = 100;
-    }
-
-    return total;
-  }
+  // Wellness is now predicted by the ML Model directly
 
   @override
   Widget build(BuildContext context) {
-    double wellnessScore = calculateWellness();
 
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
@@ -96,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: MoodCard(
                     emoji: "Wellness",
-                    label: "${wellnessScore.toStringAsFixed(0)}/100",
+                    label: widget.predictedWellness,
                     onTap: () {},
                   ),
                 ),

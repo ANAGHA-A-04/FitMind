@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/step_service.dart';
 import '../models/checkin_model.dart';
-import 'home_screen.dart';
+import '../services/api_service.dart';
+import '../services/level_service.dart';
+import 'wellness_journey_map.dart';
 
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
@@ -15,6 +17,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   String selectedMood = "";
   double sleepHours = 7.5;
   double stressLevel = 5;
+  bool isLoading = false;
 
   int steps = 0;
   int? initialSteps;
@@ -74,7 +77,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     );
   }
 
-  void submitCheckIn() {
+  Future<void> submitCheckIn() async {
 
     if (selectedMood.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -83,10 +86,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
       return;
     }
 
-    print("Mood: $selectedMood");
-    print("Sleep: $sleepHours");
-    print("Stress: $stressLevel");
-    print("Steps Today: $steps");
+    setState(() {
+      isLoading = true;
+    });
 
     CheckInModel checkIn = CheckInModel(
       mood: selectedMood,
@@ -95,6 +97,27 @@ class _CheckInScreenState extends State<CheckInScreen> {
       steps: steps,
       date: DateTime.now(),
     );
+
+    String? predictedState = await ApiService.getWellnessPrediction(checkIn);
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (predictedState == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to connect to Wellness AI Model!"),
+        ),
+      );
+      // Fallback
+      predictedState = "Balanced";
+    }
+
+    // Mark as checked-in today
+    await LevelService.markCheckedInToday();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -105,12 +128,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => HomeScreen(
-          mood:selectedMood,
-          sleep:sleepHours,
-          stress:stressLevel,
-          steps:steps,
-        ),
+        builder: (context) => const WellnessJourneyMap(),
       ),
     );
   }
@@ -228,17 +246,19 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
             const SizedBox(height: 40),
 
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: submitCheckIn,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : submitCheckIn,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Submit Check-in"),
                 ),
-                child: const Text("Submit Check-in"),
-              ),
-            ),
+              )
           ],
         ),
       ),

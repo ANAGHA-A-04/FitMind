@@ -1,6 +1,7 @@
 def mood_to_number(mood):
     return {
         "Sad": 0,
+        "Stressed": 0,
         "Neutral": 1,
         "Happy": 2
     }.get(mood, 1)
