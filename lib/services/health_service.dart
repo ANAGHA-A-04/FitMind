@@ -19,10 +19,13 @@ class HealthService {
       }
 
       DateTime now = DateTime.now();
-      DateTime startOfDay = DateTime(now.year, now.month, now.day);
+      DateTime startOfDay = DateTime(now.year, now.month, now.day,0,0,0);
+      DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
       int? steps = await health.getTotalStepsInInterval(startOfDay, now);
-
+      print("Authorization granted: $granted");
+      print("Start: $startOfDay");
+      print("Now: $now");
       print("Today's steps: $steps");
 
       return steps ?? 0;

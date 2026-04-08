@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/wellness_service.dart';
 import '../services/step_service.dart';
+import '../services/health_service.dart';
 
 class LevelDetailsPage extends StatefulWidget {
   final int levelId;
@@ -23,8 +24,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
 
   // Pedometer
   int steps = 0;
-  int? initialSteps;
-  final StepService stepService = StepService();
+  final HealthService healthService = HealthService();
 
   // AI Output
   String currentWellnessState = "Unknown";
@@ -41,20 +41,25 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
 
-    // Start pedometer
-    stepService.startStepCounter((stepCount) {
-      initialSteps ??= stepCount;
-      setState(() {
-        steps = stepCount - initialSteps!;
-      });
+    _fadeIn = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOut,
+    );
+
+    _loadSteps(); // 👈 IMPORTANT
+  }
+  Future<void> _loadSteps() async {
+    int todaySteps = await healthService.getTodaySteps();
+
+    print("UI received steps: $todaySteps"); // debug
+
+    setState(() {
+      steps = todaySteps;
     });
   }
-
   @override
   void dispose() {
-    stepService.stopStepCounter();
     _animController.dispose();
     super.dispose();
   }
@@ -291,10 +296,9 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
         ),
         const SizedBox(height: 12),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _moodButton("Sad", "😔"),
-            _moodButton("Stressed", "😫"),
           ],
         ),
 
@@ -316,7 +320,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
           child: Slider(
             value: sleepHours,
             min: 0,
-            max: 12,
+            max: 10,
             divisions: 24,
             label: "${sleepHours.toStringAsFixed(1)} h",
             onChanged: (val) => setState(() => sleepHours = val),
