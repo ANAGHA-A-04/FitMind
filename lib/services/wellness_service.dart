@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class WellnessService {
   // Pointing to the Python Flask Server running the wellness_model
   // For physical device testing, change to your PC's IP
-  static const String pythonModelUrl = "http://192.168.0.106:5002";
+  static const String pythonModelUrl = "http://10.184.213.220:5002";
 
   /// Send user check-in data to the Python AI model to predict wellness state
   /// mood is a string: "Happy", "Neutral", "Sad", "Stressed"

@@ -173,10 +173,9 @@ class _CheckInScreenState extends State<CheckInScreen> {
             const SizedBox(height: 15),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 moodButton("Sad", "😔"),
-                moodButton("Stressed", "😫"),
               ],
             ),
 
@@ -189,7 +188,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
             Slider(
               min: 0,
-              max: 12,
+              max: 10,
               value: sleepHours,
               onChanged: (value) {
                 setState(() {

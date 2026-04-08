@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class ChatbotService {
   // Update this IP to your computer's local IP address
   // Find it by running: ipconfig (Windows) or ifconfig (Mac/Linux)
-  static const String baseUrl = 'http://192.168.0.106:5001';
+  static const String baseUrl = 'http://10.184.213.220:5001';
 
   /// Send a message to the FitMind chatbot and get a response
   static Future<String> sendMessage(String message) async {
