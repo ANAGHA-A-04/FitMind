@@ -4,31 +4,37 @@ import '../models/checkin_model.dart';
 
 class ApiService {
 
-  // Change this to your computer IP
-  static const String baseUrl = "http://192.168.0.104:5000/api";
+  // Change this to the IP of the machine running wellness_model/app.py
+  static const String mlBaseUrl = "http://192.168.0.106:5002";
 
-  // Send daily check-in data to backend
-  static Future<bool> saveCheckIn(CheckInModel checkin) async {
+  // Send daily check-in data to ML backend and get prediction
+  static Future<String?> getWellnessPrediction(CheckInModel checkin) async {
     try {
-
       final response = await http.post(
-        Uri.parse("$baseUrl/checkin"),
+        Uri.parse("$mlBaseUrl/predict"),
         headers: {
           "Content-Type": "application/json"
         },
-        body: jsonEncode(checkin.toJson()),
+        body: jsonEncode({
+          "steps": checkin.steps,
+          "sleep": checkin.sleepHours,
+          "stress": checkin.stressLevel,
+          "mood": checkin.mood
+        }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          return data['mental_state'].toString();
+        }
       } else {
-        print("Error: ${response.body}");
-        return false;
+        print("Error API: ${response.body}");
       }
-
+      return null;
     } catch (e) {
       print("API Error: $e");
-      return false;
+      return null;
     }
   }
 
