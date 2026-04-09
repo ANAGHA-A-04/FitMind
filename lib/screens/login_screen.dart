@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
-import 'checkin_screen.dart';
 import 'wellness_journey_map.dart';
 
 class LoginScreen extends StatelessWidget {

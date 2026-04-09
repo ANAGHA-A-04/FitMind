@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'level_details_page.dart';
 import 'chat_page.dart';
 import '../services/level_service.dart';
-import 'checkin_screen.dart';
+
 
 class WellnessJourneyMap extends StatefulWidget {
   const WellnessJourneyMap({super.key});
@@ -22,15 +22,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
   }
 
   Future<void> _initializeApp() async {
-    bool hasCheckedIn = await LevelService.hasCheckedInToday();
-    if (!hasCheckedIn) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const CheckInScreen()),
-      );
-      return;
-    }
+  
 
     int level = await LevelService.getActiveLevel();
     if (mounted) {
