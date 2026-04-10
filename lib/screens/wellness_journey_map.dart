@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'level_details_page.dart';
+import 'level_option_page.dart';
 import 'chat_page.dart';
 import '../services/level_service.dart';
 
@@ -223,7 +223,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LevelDetailsPage(levelId: level),
+        builder: (context) => LevelOptionPage(level: level),
       ),
     );
   }
