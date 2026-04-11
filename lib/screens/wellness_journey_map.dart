@@ -4,16 +4,20 @@ import 'chat_page.dart';
 import '../services/level_service.dart';
 
 
+
 class WellnessJourneyMap extends StatefulWidget {
   const WellnessJourneyMap({super.key});
+
 
   @override
   State<WellnessJourneyMap> createState() => _WellnessJourneyMapState();
 }
 
+
 class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
   bool isLoading = true;
   int activeLevel = 0;
+
 
   @override
   void initState() {
@@ -21,8 +25,10 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
     _initializeApp();
   }
 
+
   Future<void> _initializeApp() async {
-  
+
+
 
     int level = await LevelService.getActiveLevel();
     if (mounted) {
@@ -32,6 +38,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       });
     }
   }
+
 
   Widget _buildDynamicNode(BuildContext context, int level, {required bool isRight}) {
     if (level == activeLevel) {
@@ -43,6 +50,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -51,6 +59,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
         body: Center(child: CircularProgressIndicator(color: Color(0xFF00FF94))),
       );
     }
+
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1B15), // Deep rich green-black
@@ -101,6 +110,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
     );
   }
 
+
   Widget _buildPath() {
     return Container(
       height: 60,
@@ -111,6 +121,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
+
 
   Widget _buildMilestoneTitle(String text) {
     return Padding(
@@ -126,13 +137,14 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
     );
   }
 
+
   Widget _buildLevelNode(BuildContext context, int level, {required bool isLocked, required bool isRight}) {
     return Align(
       alignment: isRight ? const Alignment(0.4, 0) : const Alignment(-0.4, 0),
       child: GestureDetector(
         onTap: () {
           if (!isLocked) {
-           _openLevel(context, level);
+            _openLevel(context, level);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Complete previous levels first!')));
           }
@@ -151,7 +163,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
                 ),
               ),
               child: Icon(
-                isLocked ? Icons.lock : Icons.check, 
+                isLocked ? Icons.lock : Icons.check,
                 color: isLocked ? Colors.white54 : Colors.greenAccent,
                 size: 30,
               ),
@@ -169,6 +181,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
+
 
   Widget _buildLiveNode(BuildContext context, int level, {required bool isRight}) {
     return Align(
@@ -218,6 +231,7 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
+
 
   void _openLevel(BuildContext context, int level) {
     Navigator.push(

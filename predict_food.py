@@ -5,17 +5,36 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing import image
-from nutrition import get_nutrition
+from  nutrition import get_nutrition
 
-MODEL_PATH = "models/20260315-111204/best_model.keras"
+MODEL_PATH = "app_model.h5"
 CLASS_PATH = "models/20260315-111204/class_names.txt"
 
-# Load model
-model = tf.keras.models.load_model(MODEL_PATH)
+# Load model with error handling
+try:
+    model = tf.keras.models.load_model(MODEL_PATH)
+except PermissionError as e:
+    print(f" Permission denied: {e}")
+    print(f" Try running in PowerShell as Administrator:")
+    print(f" icacls '{os.path.abspath(MODEL_PATH)}' /grant:r \"$env:USERNAME`:F\"")
+    print(f" icacls '{os.path.abspath(CLASS_PATH)}' /grant:r \"$env:USERNAME`:F\"")
+    exit(1)
+except FileNotFoundError:
+    print(f" Model file not found: {MODEL_PATH}")
+    exit(1)
 
 # Load class names
-with open(CLASS_PATH) as f:
-    class_names = [line.strip() for line in f]
+try:
+    with open(CLASS_PATH) as f:
+        class_names = [line.strip() for line in f]
+except PermissionError as e:
+    print(f" Permission denied: {e}")
+    print(f" Try running in PowerShell as Administrator:")
+    print(f" icacls '{os.path.abspath(CLASS_PATH)}' /grant:r \"$env:USERNAME`:F\"")
+    exit(1)
+except FileNotFoundError:
+    print(f" Class file not found: {CLASS_PATH}")
+    exit(1)
 
 # Total nutrients
 total = {
