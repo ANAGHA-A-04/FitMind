@@ -1,4 +1,5 @@
 def mood_to_number(mood):
+    mood = str(mood).capitalize()
     return {
         "Sad": 0,
         "Neutral": 1,
