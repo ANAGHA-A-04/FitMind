@@ -28,6 +28,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
 
   // AI Output
   String currentWellnessState = "Unknown";
+  String currentLifestyleCluster = "";
 
   // Animation controller for result reveal
   late AnimationController _animController;
@@ -77,18 +78,28 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
 
     setState(() => isAnalyzing = true);
 
-    // Call the Python Wellness ML API
-    String prediction = await WellnessService.getWellnessPrediction(
-      steps,
-      sleepHours,
-      stressLevel,
-      selectedMood,
-    );
+    // Call both AI models in parallel
+    final results = await Future.wait([
+      WellnessService.getWellnessPrediction(
+        steps,
+        sleepHours,
+        stressLevel,
+        selectedMood,
+      ),
+      WellnessService.getLifestyleCluster(
+        steps,
+        sleepHours,
+        stressLevel,
+        5.0, // mood as numeric: mapped from string
+        350,  // default calories (pedometer doesn't track calories yet)
+      ),
+    ]);
 
     if (!mounted) return;
 
     setState(() {
-      currentWellnessState = prediction;
+      currentWellnessState   = results[0];
+      currentLifestyleCluster = results[1];
       isAnalyzing = false;
       hasCheckedIn = true;
     });
@@ -606,6 +617,12 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             color: Colors.greenAccent,
           ),
 
+          const SizedBox(height: 24),
+
+          // ── LIFESTYLE CLUSTER CARD ──
+          if (currentLifestyleCluster.isNotEmpty)
+            _buildClusterCard(),
+
           const SizedBox(height: 30),
 
           // ── DONE BUTTON ──
@@ -637,6 +654,98 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
           ),
 
           const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // ─── LIFESTYLE CLUSTER CARD ───
+  Widget _buildClusterCard() {
+    Color clusterColor;
+    IconData clusterIcon;
+    String clusterDesc;
+
+    switch (currentLifestyleCluster) {
+      case 'High-Energy Achiever':
+        clusterColor = Colors.greenAccent;
+        clusterIcon  = Icons.bolt;
+        clusterDesc  = "You're highly active with great sleep and low stress. Keep up the momentum!";
+        break;
+      case 'Stressed Overworker':
+        clusterColor = Colors.redAccent;
+        clusterIcon  = Icons.warning_amber_rounded;
+        clusterDesc  = "Your stress is elevated and sleep is low. Try to slow down and recharge.";
+        break;
+      case 'Sedentary/Relaxed':
+        clusterColor = Colors.amberAccent;
+        clusterIcon  = Icons.weekend;
+        clusterDesc  = "You're calm but not very active. A short daily walk can boost your energy!";
+        break;
+      default:
+        clusterColor = Colors.blueAccent;
+        clusterIcon  = Icons.person;
+        clusterDesc  = "Your lifestyle profile has been analyzed.";
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            clusterColor.withOpacity(0.18),
+            clusterColor.withOpacity(0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: clusterColor.withOpacity(0.5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: clusterColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(clusterIcon, color: clusterColor, size: 28),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Lifestyle Cluster",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.55),
+                    fontSize: 11,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  currentLifestyleCluster,
+                  style: TextStyle(
+                    color: clusterColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  clusterDesc,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

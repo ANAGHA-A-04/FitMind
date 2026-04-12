@@ -7,7 +7,7 @@ import numpy as np
 from tensorflow.keras.preprocessing import image
 from nutrition import get_nutrition
 
-MODEL_PATH = "models/20260315-111204/best_model.keras"
+MODEL_PATH = "models/20260315-111204/best_model.keras (1)"
 CLASS_PATH = "models/20260315-111204/class_names.txt"
 
 # Load model

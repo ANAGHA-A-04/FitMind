@@ -14,6 +14,9 @@ start "FitMind Auth Backend" cmd /k "cd backend && node server.js"
 timeout /t 2 /nobreak >nul
 
 start "FitMind Chatbot" cmd /k "cd fitmind_chatbot && python app.py"
+timeout /t 2 /nobreak >nul
+
+start "FitMind Wellness Model" cmd /k "cd wellness_model && python app.py"
 
 echo.
 echo Both servers are starting in separate windows...
