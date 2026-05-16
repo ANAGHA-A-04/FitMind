@@ -5,7 +5,7 @@ import '../models/checkin_model.dart';
 class ApiService {
 
   // Change this to the IP of the machine running wellness_model/app.py
-  static const String mlBaseUrl = "http://192.168.43.130:5002";
+  static const String mlBaseUrl = "http://10.17.184.12:5002";
 
   // Send daily check-in data to ML backend and get prediction
   static Future<String?> getWellnessPrediction(CheckInModel checkin) async {

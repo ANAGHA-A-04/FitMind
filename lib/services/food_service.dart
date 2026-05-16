@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class FoodService {
-  static const String baseUrl = "http://10.184.213.220:5002/api";
+  static const String baseUrl = "http://10.17.184.12:5002/api";
 
   // ✅ IMAGE ANALYSIS (MISSING FUNCTION FIX)
   static Future<Map<String, dynamic>> analyzeFood(String imagePath) async {

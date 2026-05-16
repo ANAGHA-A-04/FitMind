@@ -10,23 +10,65 @@ import argparse
 import json
 import sys
 
-MODEL_PATH = "models/20260315-111204/best_model.keras (1)"
+# Candidate model paths (checked in order)
+MODEL_CANDIDATES = [
+    "app_model.h5",
+    "models/20260315-111204/final_model.keras",
+    "models/20260315-111204/best_model.keras",
+    "models/20260313-003259/final_model.keras",
+    "models/20260313-003259/best_model.keras",
+    "cnn_model/models/20260315-111204/best_model.keras",
+]
+
 CLASS_PATH = "models/20260315-111204/class_names.txt"
 
-# Load model with error handling
-try:
-    model = tf.keras.models.load_model(MODEL_PATH)
-except Exception as e:
-    print(f"Error loading model: {e}", file=sys.stderr)
-    sys.exit(1)
+# Robust model loading: try several strategies and report detailed errors
+model = None
+found_model = None
+load_errors = {}
+for p in MODEL_CANDIDATES:
+    if not os.path.exists(p):
+        continue
+    last_exc = None
+    try:
+        model = tf.keras.models.load_model(p)
+        found_model = p
+        break
+    except Exception as e1:
+        last_exc = e1
+    try:
+        model = tf.keras.models.load_model(p, compile=False)
+        found_model = p
+        break
+    except Exception as e2:
+        last_exc = e2
+    try:
+        import keras as _keras
+        try:
+            model = _keras.models.load_model(p, compile=False)
+            found_model = p
+            break
+        except Exception as e3:
+            last_exc = e3
+    except Exception:
+        pass
 
-# Load class names
-try:
-    with open(CLASS_PATH) as f:
-        class_names = [line.strip() for line in f]
-except Exception as e:
-    print(f"Error loading class names: {e}", file=sys.stderr)
+    load_errors[p] = str(last_exc)
+
+if model is None:
+    tried = [p for p in MODEL_CANDIDATES]
+    print("\nError loading model: none of the candidate files could be loaded.", file=sys.stderr)
+    print(f"Tried: {tried}", file=sys.stderr)
+    print("Per-file errors:", file=sys.stderr)
+    for p, err in load_errors.items():
+        print(f" - {p}: {err}", file=sys.stderr)
+    print("\nSuggestions:", file=sys.stderr)
+    print(" - Ensure you have a compatible TensorFlow/Keras version for the saved model format.", file=sys.stderr)
+    print(" - If the model is a .keras archive, try re-saving it as HDF5 (model.save('model.h5')) or as a SavedModel directory.", file=sys.stderr)
+    print(" - You can convert or re-export the model using the training scripts in `cnn_model`.", file=sys.stderr)
     sys.exit(1)
+else:
+    print(f"Loaded model from: {found_model}")
 
 def analyze_image(image_path, grams=100):
     """Analyze a single image and return nutrition info"""
