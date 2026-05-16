@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AdaptiveService {
-  static const String baseUrl = "http://192.168.43.12:5004";
+  static const String baseUrl = "http://10.184.213.220:5004";
 
   static Future<Map<String, dynamic>> generateTasks({
     required String userId,

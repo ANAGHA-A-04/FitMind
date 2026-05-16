@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FoodService {
-  static const String baseUrl = "http://192.168.43.12:5003/api";
+  static const String baseUrl = "http://10.184.213.220:5003/api";
 
   static Future<Map<String, dynamic>> analyzeFood(String imagePath) async {
     final uri = Uri.parse("$baseUrl/food/analyze");
