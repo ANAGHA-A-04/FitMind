@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/wellness_service.dart';
-import '../services/step_service.dart';
 import '../services/health_service.dart';
+import '../services/level_service.dart';
+import 'dart:math';
 
 class LevelDetailsPage extends StatefulWidget {
   final int levelId;
@@ -13,56 +14,61 @@ class LevelDetailsPage extends StatefulWidget {
 
 class _LevelDetailsPageState extends State<LevelDetailsPage>
     with SingleTickerProviderStateMixin {
-  // State
   bool hasCheckedIn = false;
   bool isAnalyzing = false;
 
-  // Check-in inputs
   String selectedMood = "";
   double sleepHours = 7.5;
   double stressLevel = 5;
 
-  // Pedometer
   int steps = 0;
   final HealthService healthService = HealthService();
 
-  // AI Output
   String currentWellnessState = "Unknown";
   String currentLifestyleCluster = "";
 
-  // Animation controller for result reveal
   late AnimationController _animController;
   late Animation<double> _fadeIn;
 
   @override
   void initState() {
     super.initState();
-
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-
     _fadeIn = CurvedAnimation(
       parent: _animController,
       curve: Curves.easeOut,
     );
-
-    _loadSteps(); // 👈 IMPORTANT
+    _loadSteps();
   }
+
   Future<void> _loadSteps() async {
     int todaySteps = await healthService.getTodaySteps();
-
-    print("UI received steps: $todaySteps"); // debug
-
+    if (!mounted) return;
     setState(() {
       steps = todaySteps;
     });
   }
+
   @override
   void dispose() {
     _animController.dispose();
     super.dispose();
+  }
+
+  int _calculateScoreFromLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'stressed':
+        return 35;
+      case 'balanced':
+        return 70;
+      case 'healthy':
+        return 90;
+      default:
+        return 50;
+    }
   }
 
   Future<void> _submitCheckIn() async {
@@ -78,7 +84,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
 
     setState(() => isAnalyzing = true);
 
-    // Call both AI models in parallel
     final results = await Future.wait([
       WellnessService.getWellnessPrediction(
         steps,
@@ -90,19 +95,36 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
         steps,
         sleepHours,
         stressLevel,
-        5.0, // mood as numeric: mapped from string
-        350,  // default calories (pedometer doesn't track calories yet)
+        5.0,
+        350,
       ),
     ]);
 
     if (!mounted) return;
 
+    final wellnessLabel = results[0];
+    final clusterLabel = results[1];
+    final score = _calculateScoreFromLabel(wellnessLabel);
+
     setState(() {
-      currentWellnessState   = results[0];
-      currentLifestyleCluster = results[1];
+      currentWellnessState = wellnessLabel;
+      currentLifestyleCluster = clusterLabel;
       isAnalyzing = false;
       hasCheckedIn = true;
     });
+
+    await LevelService.saveWellnessScoreLocally(
+      levelId: widget.levelId,
+      wellnessScore: score,
+    );
+
+    await LevelService.saveWellnessScoreToBackend(
+      userId: 1,
+      levelId: widget.levelId,
+      wellnessScore: score,
+    );
+
+    await LevelService.unlockNextLevel();
 
     _animController.forward();
   }
@@ -126,17 +148,10 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 25),
-
-                  // Conditional: Check-in form OR AI Result
-                  if (!hasCheckedIn)
-                    _buildCheckInForm()
-                  else
-                    _buildWellnessResult(),
+                  if (!hasCheckedIn) _buildCheckInForm() else _buildWellnessResult(),
                 ],
               ),
             ),
-
-            // Loading overlay while AI analyzes
             if (isAnalyzing)
               Container(
                 color: Colors.black.withOpacity(0.75),
@@ -189,7 +204,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     );
   }
 
-  // ─── HEADER WITH XP ───
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -255,10 +269,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
                 size: 28,
               ),
               SizedBox(width: 5),
-              Text(
-                "🔥",
-                style: TextStyle(fontSize: 20),
-              ),
+              Text("🔥", style: TextStyle(fontSize: 20)),
             ],
           ),
         ],
@@ -266,7 +277,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     );
   }
 
-  // ─── CHECK-IN FORM ───
   Widget _buildCheckInForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,10 +294,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
           "Your responses power the AI wellness analysis.",
           style: TextStyle(color: Colors.white54, fontSize: 14),
         ),
-
         const SizedBox(height: 30),
-
-        // ── MOOD SELECTION ──
         const Text(
           "How are you feeling today?",
           style: TextStyle(
@@ -297,7 +304,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
           ),
         ),
         const SizedBox(height: 15),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -312,74 +318,48 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             _moodButton("Sad", "😔"),
           ],
         ),
-
         const SizedBox(height: 30),
-
-        // ── SLEEP SLIDER ──
         const Text(
           "Hours of Sleep",
           style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         const SizedBox(height: 10),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: Colors.indigoAccent,
-            inactiveTrackColor: Colors.white12,
-            thumbColor: Colors.indigoAccent,
-            overlayColor: Colors.indigoAccent.withOpacity(0.2),
-          ),
-          child: Slider(
-            value: sleepHours,
-            min: 0,
-            max: 10,
-            divisions: 24,
-            label: "${sleepHours.toStringAsFixed(1)} h",
-            onChanged: (val) => setState(() => sleepHours = val),
-          ),
+        Slider(
+          value: sleepHours,
+          min: 0,
+          max: 10,
+          divisions: 24,
+          label: "${sleepHours.toStringAsFixed(1)} h",
+          onChanged: (val) => setState(() => sleepHours = val),
         ),
         Text(
           "${sleepHours.toStringAsFixed(1)} hrs",
           style: const TextStyle(color: Colors.white70, fontSize: 14),
         ),
-
         const SizedBox(height: 25),
-
-        // ── STRESS SLIDER ──
         const Text(
           "Stress Level",
           style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         const SizedBox(height: 10),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: Colors.redAccent,
-            inactiveTrackColor: Colors.white12,
-            thumbColor: Colors.redAccent,
-            overlayColor: Colors.redAccent.withOpacity(0.2),
-          ),
-          child: Slider(
-            value: stressLevel,
-            min: 0,
-            max: 10,
-            divisions: 10,
-            label: "${stressLevel.toInt()}/10",
-            onChanged: (val) => setState(() => stressLevel = val),
-          ),
+        Slider(
+          value: stressLevel,
+          min: 0,
+          max: 10,
+          divisions: 10,
+          label: "${stressLevel.toInt()}/10",
+          onChanged: (val) => setState(() => stressLevel = val),
         ),
         Text(
           "Stress: ${stressLevel.toStringAsFixed(1)}",
           style: const TextStyle(color: Colors.white70, fontSize: 14),
         ),
-
         const SizedBox(height: 25),
-
-        // ── PEDOMETER STEPS ──
         const Text(
           "Steps Today",
           style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         const SizedBox(height: 10),
-
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -422,53 +402,32 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             ],
           ),
         ),
-
         const SizedBox(height: 40),
-
-        // ── SUBMIT BUTTON ──
         SizedBox(
           width: double.infinity,
           height: 55,
           child: ElevatedButton(
             onPressed: _submitCheckIn,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.greenAccent,
-              foregroundColor: const Color(0xFF062A1E),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              "Run AI Analysis",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            child: const Text("Run AI Analysis"),
           ),
         ),
-
         const SizedBox(height: 20),
       ],
     );
   }
 
-  // ─── MOOD BUTTON ───
   Widget _moodButton(String mood, String emoji) {
     bool isSelected = selectedMood == mood;
     return GestureDetector(
       onTap: () => setState(() => selectedMood = mood),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         width: MediaQuery.of(context).size.width * 0.42,
         height: 100,
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.greenAccent.withOpacity(0.25)
-              : Colors.white.withOpacity(0.06),
+          color: isSelected ? Colors.greenAccent.withOpacity(0.25) : Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: isSelected
-                ? Colors.greenAccent
-                : Colors.white.withOpacity(0.1),
+            color: isSelected ? Colors.greenAccent : Colors.white.withOpacity(0.1),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -491,9 +450,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     );
   }
 
-  // ─── AI WELLNESS RESULT ───
   Widget _buildWellnessResult() {
-    // Dynamic color based on wellness state
     Color stateColor = Colors.greenAccent;
     IconData stateIcon = Icons.favorite;
     String stateMessage = "You're in great shape! Keep it up.";
@@ -503,26 +460,24 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     if (stateLower.contains("stress")) {
       stateColor = Colors.redAccent;
       stateIcon = Icons.warning_amber_rounded;
-      stateMessage =
-          "High stress detected. Focus on relaxation and deep breathing today.";
+      stateMessage = "High stress detected. Focus on relaxation and deep breathing today.";
     } else if (stateLower.contains("balanced")) {
       stateColor = Colors.amber;
       stateIcon = Icons.balance;
-      stateMessage =
-          "You're in a balanced state. Maintain your routine and stay mindful.";
+      stateMessage = "You're in a balanced state. Maintain your routine and stay mindful.";
     } else if (stateLower.contains("healthy")) {
       stateColor = Colors.greenAccent;
       stateIcon = Icons.favorite;
-      stateMessage =
-          "Excellent wellness! Your habits are paying off — keep going!";
+      stateMessage = "Excellent wellness! Your habits are paying off — keep going!";
     }
+
+    final score = LevelService.wellnessScoreFromLabel(currentWellnessState);
 
     return FadeTransition(
       opacity: _fadeIn,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── AI STATE BANNER ──
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -548,10 +503,10 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
                   child: Icon(stateIcon, color: stateColor, size: 40),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   "AI Wellness State",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white54,
                     fontSize: 12,
                     letterSpacing: 1.5,
                   ),
@@ -575,13 +530,19 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
                     height: 1.4,
                   ),
                 ),
+                const SizedBox(height: 15),
+                Text(
+                  "Wellness Score: $score / 100",
+                  style: const TextStyle(
+                    color: Colors.greenAccent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // ── SUBMITTED DATA SUMMARY ──
           const Text(
             "Your Check-in Summary",
             style: TextStyle(
@@ -591,7 +552,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             ),
           ),
           const SizedBox(height: 15),
-
           _buildSummaryTile(
             icon: Icons.sentiment_satisfied_alt,
             label: "Mood",
@@ -616,16 +576,9 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             value: "$steps steps",
             color: Colors.greenAccent,
           ),
-
           const SizedBox(height: 24),
-
-          // ── LIFESTYLE CLUSTER CARD ──
-          if (currentLifestyleCluster.isNotEmpty)
-            _buildClusterCard(),
-
+          if (currentLifestyleCluster.isNotEmpty) _buildClusterCard(),
           const SizedBox(height: 30),
-
-          // ── DONE BUTTON ──
           OutlinedButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -634,32 +587,16 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
                   backgroundColor: Color(0xFF1E8A5E),
                 ),
               );
-              Navigator.pop(context);
+              Navigator.pop(context, true);
             },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.greenAccent, width: 2),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-            child: const Text(
-              "Complete Level Check-in",
-              style: TextStyle(
-                color: Colors.greenAccent,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const Text("Complete Level Check-in"),
           ),
-
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // ─── LIFESTYLE CLUSTER CARD ───
   Widget _buildClusterCard() {
     Color clusterColor;
     IconData clusterIcon;
@@ -668,23 +605,23 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     switch (currentLifestyleCluster) {
       case 'High-Energy Achiever':
         clusterColor = Colors.greenAccent;
-        clusterIcon  = Icons.bolt;
-        clusterDesc  = "You're highly active with great sleep and low stress. Keep up the momentum!";
+        clusterIcon = Icons.bolt;
+        clusterDesc = "You're highly active with great sleep and low stress. Keep up the momentum!";
         break;
       case 'Stressed Overworker':
         clusterColor = Colors.redAccent;
-        clusterIcon  = Icons.warning_amber_rounded;
-        clusterDesc  = "Your stress is elevated and sleep is low. Try to slow down and recharge.";
+        clusterIcon = Icons.warning_amber_rounded;
+        clusterDesc = "Your stress is elevated and sleep is low. Try to slow down and recharge.";
         break;
       case 'Sedentary/Relaxed':
         clusterColor = Colors.amberAccent;
-        clusterIcon  = Icons.weekend;
-        clusterDesc  = "You're calm but not very active. A short daily walk can boost your energy!";
+        clusterIcon = Icons.weekend;
+        clusterDesc = "You're calm but not very active. A short daily walk can boost your energy!";
         break;
       default:
         clusterColor = Colors.blueAccent;
-        clusterIcon  = Icons.person;
-        clusterDesc  = "Your lifestyle profile has been analyzed.";
+        clusterIcon = Icons.person;
+        clusterDesc = "Your lifestyle profile has been analyzed.";
     }
 
     return Container(
@@ -751,7 +688,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
     );
   }
 
-  // ─── SUMMARY TILE ───
   Widget _buildSummaryTile({
     required IconData icon,
     required String label,
@@ -780,13 +716,7 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
-                  ),
-                ),
+                Text(label, style: const TextStyle(color: Colors.white54, fontSize: 14)),
                 Text(
                   value,
                   style: const TextStyle(

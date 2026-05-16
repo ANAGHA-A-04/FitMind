@@ -9,23 +9,76 @@ from nutrition import get_nutrition
 import argparse
 import json
 import sys
+import traceback
 
-MODEL_PATH = "models/20260315-111204/best_model.keras (1)"
+# Candidate model paths (checked in order)
+MODEL_CANDIDATES = [
+    "app_model.h5",
+    "models/20260315-111204/final_model.keras",
+    "models/20260315-111204/best_model.keras",
+    "models/20260313-003259/final_model.keras",
+    "models/20260313-003259/best_model.keras",
+    "cnn_model/models/20260315-111204/best_model.keras",
+]
+
 CLASS_PATH = "models/20260315-111204/class_names.txt"
 
-# Load model with error handling
-try:
-    model = tf.keras.models.load_model(MODEL_PATH)
-except Exception as e:
-    print(f"Error loading model: {e}", file=sys.stderr)
-    sys.exit(1)
+# Robust model loading: try several strategies and report detailed errors
+model = None
+found_model = None
+load_errors = {}
+for p in MODEL_CANDIDATES:
+    if not os.path.exists(p):
+        continue
+    last_exc = None
+    try:
+        model = tf.keras.models.load_model(p, compile=False)
+        found_model = p
+        break
+    except Exception as e1:
+        last_exc = e1
+    try:
+        import keras as _keras
+        try:
+            model = _keras.models.load_model(p, compile=False)
+            found_model = p
+            break
+        except Exception as e2:
+            last_exc = e2
+    except Exception:
+        pass
 
-# Load class names
+    load_errors[p] = str(last_exc)
+
+if model is None:
+    tried = [p for p in MODEL_CANDIDATES]
+    print("\nError loading model: none of the candidate files could be loaded.", file=sys.stderr)
+    print(f"Tried: {tried}", file=sys.stderr)
+    print("Per-file errors:", file=sys.stderr)
+    for p, err in load_errors.items():
+        print(f" - {p}: {err}", file=sys.stderr)
+    print("\nSuggestions:", file=sys.stderr)
+    print(" - Ensure you have a compatible TensorFlow/Keras version for the saved model format.", file=sys.stderr)
+    print(" - If the model is a .keras archive, try re-saving it as HDF5 (model.save('model.h5')) or as a SavedModel directory.", file=sys.stderr)
+    print(" - You can convert or re-export the model using the training scripts in `cnn_model`.", file=sys.stderr)
+    sys.exit(1)
+else:
+    try:
+        model.compile(
+            optimizer='adam',
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+    except Exception:
+        pass
+    print(f"Loaded model from: {found_model}")
+
+# Load class names after model is successfully loaded
 try:
-    with open(CLASS_PATH) as f:
-        class_names = [line.strip() for line in f]
+    with open(CLASS_PATH, 'r', encoding='utf-8') as f:
+        class_names = [line.strip() for line in f if line.strip()]
 except Exception as e:
-    print(f"Error loading class names: {e}", file=sys.stderr)
+    print(f"Error loading class names from {CLASS_PATH}: {e}", file=sys.stderr)
     sys.exit(1)
 
 def analyze_image(image_path, grams=100):
@@ -38,7 +91,13 @@ def analyze_image(image_path, grams=100):
 
         # Make prediction
         pred = model.predict(img_array, verbose=0)
-        predicted_class = class_names[np.argmax(pred)]
+        print(f"[DEBUG] prediction shape={pred.shape}, values={pred.flatten()[:5]}")
+
+        class_index = int(np.argmax(pred))
+        if class_index >= len(class_names):
+            raise ValueError(f"predicted class index {class_index} out of range for {len(class_names)} class names")
+
+        predicted_class = class_names[class_index]
         confidence = float(np.max(pred))
 
         # Get nutrition info
@@ -62,6 +121,7 @@ def analyze_image(image_path, grams=100):
                 "error": "Nutrition data not found for this food"
             }
     except Exception as e:
+        traceback.print_exc()
         return {"error": f"Analysis failed: {str(e)}"}
 
 def main():

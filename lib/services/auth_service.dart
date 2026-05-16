@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   // Change this to your computer's local IP when testing on physical device
   // For emulator, use: Android - 10.0.2.2, iOS - localhost
-  static const String baseUrl = 'http://192.168.43.130:5000/api';
+  static const String baseUrl = 'http://10.184.213.220:5000/api';
 
 // Register new user
   static Future<Map<String, dynamic>> register({
@@ -37,9 +37,16 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
+// Clear old user data first (in case of re-registration)
+        await clearUserDataOnLogin();
+        
 // Save token to local storage
         if (data['data'] != null && data['data']['token'] != null) {
           await saveToken(data['data']['token']);
+        }
+// Save userId to local storage
+        if (data['data'] != null && data['data']['user'] != null && data['data']['user']['id'] != null) {
+          await saveUserId(data['data']['user']['id']);
         }
         return {
           'success': true,
@@ -82,9 +89,16 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+// Clear old user data first
+        await clearUserDataOnLogin();
+        
 // Save token to local storage
         if (data['data'] != null && data['data']['token'] != null) {
           await saveToken(data['data']['token']);
+        }
+// Save userId to local storage
+        if (data['data'] != null && data['data']['user'] != null && data['data']['user']['id'] != null) {
+          await saveUserId(data['data']['user']['id']);
         }
         return {
           'success': true,
@@ -112,16 +126,66 @@ class AuthService {
     await prefs.setString('auth_token', token);
   }
 
+// Save userId to local storage
+  static Future<void> saveUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', userId);
+  }
+
 // Get token from local storage
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
   }
 
-// Remove token (logout)
+// Get userId from local storage
+  static Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    print("📦 Retrieved userId from SharedPreferences: '$userId' (type: ${userId.runtimeType})");
+    return userId;
+  }
+
+// Remove token (logout) - Clear ALL user data
   static Future<void> removeToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('userId');
+    
+    // Clear all user-specific SharedPreferences to prevent data leakage between users
+    // Level-related data
+    await prefs.remove('activeLevel');
+    await prefs.remove('xp');
+    await prefs.remove('level');
+    await prefs.remove('lastCheckInDate');
+    
+    // Wellness check data (clear all levels)
+    for (int i = 0; i <= 10; i++) {
+      await prefs.remove('wellness_score_$i');
+      await prefs.remove('wellness_done_$i');
+      await prefs.remove('diet_score_$i');
+      await prefs.remove('diet_done_$i');
+    }
+  }
+
+// Clear user data on new login (prevent data leakage)
+  static Future<void> clearUserDataOnLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Clear all user-specific SharedPreferences
+    // Level-related data
+    await prefs.remove('activeLevel');
+    await prefs.remove('xp');
+    await prefs.remove('level');
+    await prefs.remove('lastCheckInDate');
+    
+    // Wellness check data (clear all levels)
+    for (int i = 0; i <= 10; i++) {
+      await prefs.remove('wellness_score_$i');
+      await prefs.remove('wellness_done_$i');
+      await prefs.remove('diet_score_$i');
+      await prefs.remove('diet_done_$i');
+    }
   }
 
 // Check if user is logged in

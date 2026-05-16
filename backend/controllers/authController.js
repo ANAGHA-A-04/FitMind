@@ -50,6 +50,18 @@ exports.register = async (req, res) => {
         // Generate token
         const token = generateToken(user._id);
 
+        console.log("\n" + "=".repeat(50));
+        console.log("📝 REGISTER RESPONSE DEBUG");
+        console.log("=".repeat(50));
+        console.log("MongoDB User Object:");
+        console.log("  _id:", user._id);
+        console.log("  _id type:", typeof user._id);
+        console.log("  _id toString:", user._id.toString());
+        console.log("\nSending in response:");
+        const responseUserId = user._id;
+        console.log("  id: " + responseUserId + " (will be sent as 'id')");
+        console.log("=".repeat(50) + "\n");
+
         // Send response
         res.status(201).json({
             success: true,
@@ -125,6 +137,18 @@ exports.login = async (req, res) => {
 
         // Generate token
         const token = generateToken(user._id);
+
+        console.log("\n" + "=".repeat(50));
+        console.log("🔐 LOGIN RESPONSE DEBUG");
+        console.log("=".repeat(50));
+        console.log("MongoDB User Object:");
+        console.log("  _id:", user._id);
+        console.log("  _id type:", typeof user._id);
+        console.log("  _id toString:", user._id.toString());
+        console.log("\nSending in response:");
+        const responseUserId = user._id;
+        console.log("  id: " + responseUserId + " (will be sent as 'id')");
+        console.log("=".repeat(50) + "\n");
 
         // Send response
         res.status(200).json({

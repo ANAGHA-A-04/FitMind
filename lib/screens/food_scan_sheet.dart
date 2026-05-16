@@ -5,7 +5,9 @@ import 'food_result_page.dart';
 import '../services/food_service.dart';
 
 class FoodScanPage extends StatelessWidget {
-  const FoodScanPage({super.key});
+  final int levelId;
+
+  const FoodScanPage({super.key, required this.levelId});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,6 @@ class FoodScanPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // Main card container
             Expanded(
               child: Center(
                 child: Container(
@@ -44,7 +45,6 @@ class FoodScanPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Icon
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -58,7 +58,6 @@ class FoodScanPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // Title
                       const Text(
                         "AI Food Scanner",
                         style: TextStyle(
@@ -68,7 +67,6 @@ class FoodScanPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // Subtitle
                       Text(
                         "Snap a photo of your dish or upload a barcode/nutrition label to instantly extract calories and protein.",
                         textAlign: TextAlign.center,
@@ -79,33 +77,28 @@ class FoodScanPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      // Take Photo Button
                       _buildActionButton(
                         icon: Icons.camera_alt,
                         label: "Take Photo",
                         onTap: () async {
-                          final image =
-                          await picker.pickImage(source: ImageSource.camera);
+                          final image = await picker.pickImage(source: ImageSource.camera);
                           if (image != null) {
                             await _handleImage(context, image.path);
                           }
                         },
                       ),
                       const SizedBox(height: 16),
-                      // Upload from Gallery Button
                       _buildActionButton(
                         icon: Icons.photo_library,
                         label: "Upload from Gallery",
                         onTap: () async {
-                          final image =
-                          await picker.pickImage(source: ImageSource.gallery);
+                          final image = await picker.pickImage(source: ImageSource.gallery);
                           if (image != null) {
                             await _handleImage(context, image.path);
                           }
                         },
                       ),
                       const SizedBox(height: 24),
-                      // OR Divider
                       Row(
                         children: [
                           Expanded(
@@ -131,7 +124,6 @@ class FoodScanPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      // Manual Entry Button
                       _buildOutlineButton(
                         label: "Manual Entry",
                         onTap: () {
@@ -206,16 +198,21 @@ class FoodScanPage extends StatelessWidget {
       if (context.mounted) Navigator.pop(context);
 
       if (context.mounted) {
-        Navigator.push(
+        final done = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => FoodResultPage(
               imagePath: path,
               resultData: result,
               quantity: quantity,
+              levelId: levelId,
             ),
           ),
         );
+
+        if (done == true && context.mounted) {
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
@@ -273,16 +270,21 @@ class FoodScanPage extends StatelessWidget {
                 if (context.mounted) Navigator.pop(context);
 
                 if (context.mounted) {
-                  Navigator.push(
+                  final done = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => FoodResultPage(
                         imagePath: "",
                         resultData: result,
                         quantity: quantity,
+                        levelId: levelId,
                       ),
                     ),
                   );
+
+                  if (done == true && context.mounted) {
+                    Navigator.pop(context, true);
+                  }
                 }
               } catch (e) {
                 if (context.mounted) Navigator.pop(context);

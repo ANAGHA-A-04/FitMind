@@ -51,5 +51,24 @@ def predict():
             "status": "error",
             "message": str(e)
         })
+@app.route('/save_wellness_score', methods=['POST'])
+def save_wellness_score():
+    data = request.json
+    try:
+        user_id = data['userId']
+        level_id = data['levelId']
+        wellness_score = data['wellnessScore']
+
+        print(f"Saving: user={user_id}, level={level_id}, score={wellness_score}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Wellness score saved successfully"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
 if __name__ == '__main__' :
     app.run(host='0.0.0.0', port=5002, debug=True)

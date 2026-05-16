@@ -1,22 +1,64 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../services/food_service.dart';
 
-class FoodResultPage extends StatelessWidget {
+class FoodResultPage extends StatefulWidget {
   final String imagePath;
   final double quantity;
   final Map<String, dynamic> resultData;
+  final int levelId;
 
   const FoodResultPage({
     super.key,
     required this.imagePath,
     required this.resultData,
     required this.quantity,
+    required this.levelId,
   });
 
   @override
+  State<FoodResultPage> createState() => _FoodResultPageState();
+}
+
+class _FoodResultPageState extends State<FoodResultPage> {
+  bool isSaving = false;
+  bool isSaved = false;
+  late int dietScore;
+
+  @override
+  void initState() {
+    super.initState();
+    dietScore = FoodService.calculateDietScore(widget.resultData, widget.quantity);
+  }
+
+  Future<void> _completeDietCheckin() async {
+    setState(() => isSaving = true);
+
+    await FoodService.saveDietScoreLocally(
+      levelId: widget.levelId,
+      dietScore: dietScore,
+    );
+
+    await FoodService.saveDietScoreToBackend(
+      userId: 1,
+      levelId: widget.levelId,
+      dietScore: dietScore,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      isSaving = false;
+      isSaved = true;
+    });
+
+    Navigator.pop(context, true);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final data = resultData;
-    final factor = quantity / 100;
+    final data = widget.resultData;
+    final factor = widget.quantity / 100;
 
     final calories = (data["calories"] ?? 0) * factor;
     final protein = (data["protein"] ?? 0) * factor;
@@ -42,36 +84,32 @@ class FoodResultPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Section
-            imagePath.isNotEmpty
+            widget.imagePath.isNotEmpty
                 ? ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-              child: Image.file(
-                File(imagePath),
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            )
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    child: Image.file(
+                      File(widget.imagePath),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  )
                 : Container(
-              height: 200,
-              width: double.infinity,
-              color: Colors.grey[900],
-              child: const Center(
-                child: Icon(
-                  Icons.fastfood,
-                  size: 50,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-
+                    height: 200,
+                    width: double.infinity,
+                    color: Colors.grey[900],
+                    child: const Center(
+                      child: Icon(
+                        Icons.fastfood,
+                        size: 50,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 20),
-
-            // Food Name & Calories
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -93,7 +131,7 @@ class FoodResultPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "${quantity.toStringAsFixed(0)} g",
+                          "${widget.quantity.toStringAsFixed(0)} g",
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 12,
@@ -141,10 +179,19 @@ class FoodResultPage extends StatelessWidget {
                 ],
               ),
             ),
-
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Diet Score: $dietScore / 100",
+                style: const TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
-
-            // Nutrition Grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.count(
@@ -161,42 +208,40 @@ class FoodResultPage extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Done Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
+              child: SizedBox(
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.green, Colors.lightGreen],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isSaving ? null : _completeDietCheckin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
+                    backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    "Done",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          "Done",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
           ],
         ),
