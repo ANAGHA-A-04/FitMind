@@ -90,26 +90,41 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Center(
           child: Column(
-            children: [
-              _buildMilestoneTitle("Advanced Awareness"),
-              _buildDynamicNode(context, 4, isRight: true),
-              _buildPath(),
-              _buildDynamicNode(context, 3, isRight: false),
-              _buildPath(),
-              _buildMilestoneTitle("Foundation"),
-              _buildDynamicNode(context, 2, isRight: true),
-              _buildPath(),
-              _buildDynamicNode(context, 1, isRight: false),
-              _buildPath(),
-              // Level 0
-              _buildDynamicNode(context, 0, isRight: true),
-            ],
+            children: _buildLevelsColumn(),
           ),
         ),
       ),
     );
   }
 
+  List<Widget> _buildLevelsColumn() {
+    List<Widget> nodes = [];
+    
+    // Build levels up to activeLevel + 5 (to show some locked levels ahead)
+    int maxLevel = activeLevel + 5;
+    
+    for (int level = maxLevel; level >= 0; level--) {
+      // Add milestone titles every 3 levels
+      if (level > 0 && level % 3 == 0) {
+        nodes.add(_buildMilestoneTitle("Level $level Milestone"));
+      }
+      
+      nodes.add(_buildDynamicNode(context, level, isRight: level % 2 == 0));
+      
+      // Add path between levels (except after the last one)
+      if (level > 0) {
+        nodes.add(_buildPath());
+      }
+    }
+    
+    return nodes;
+  }
+
+  @override
+  void didUpdateWidget(WellnessJourneyMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    setState(() {});
+  }
 
   Widget _buildPath() {
     return Container(
@@ -121,7 +136,6 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
-
 
   Widget _buildMilestoneTitle(String text) {
     return Padding(
@@ -136,7 +150,6 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
-
 
   Widget _buildLevelNode(BuildContext context, int level, {required bool isLocked, required bool isRight}) {
     return Align(
@@ -181,7 +194,6 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
-
 
   Widget _buildLiveNode(BuildContext context, int level, {required bool isRight}) {
     return Align(
@@ -231,7 +243,6 @@ class _WellnessJourneyMapState extends State<WellnessJourneyMap> {
       ),
     );
   }
-
 
   void _openLevel(BuildContext context, int level) {
     Navigator.push(

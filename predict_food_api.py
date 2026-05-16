@@ -9,6 +9,7 @@ from nutrition import get_nutrition
 import argparse
 import json
 import sys
+import traceback
 
 # Candidate model paths (checked in order)
 MODEL_CANDIDATES = [
@@ -31,25 +32,19 @@ for p in MODEL_CANDIDATES:
         continue
     last_exc = None
     try:
-        model = tf.keras.models.load_model(p)
+        model = tf.keras.models.load_model(p, compile=False)
         found_model = p
         break
     except Exception as e1:
         last_exc = e1
-    try:
-        model = tf.keras.models.load_model(p, compile=False)
-        found_model = p
-        break
-    except Exception as e2:
-        last_exc = e2
     try:
         import keras as _keras
         try:
             model = _keras.models.load_model(p, compile=False)
             found_model = p
             break
-        except Exception as e3:
-            last_exc = e3
+        except Exception as e2:
+            last_exc = e2
     except Exception:
         pass
 
@@ -68,6 +63,24 @@ if model is None:
     print(" - You can convert or re-export the model using the training scripts in `cnn_model`.", file=sys.stderr)
     sys.exit(1)
 else:
+    try:
+        model.compile(
+            optimizer='adam',
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+    except Exception:
+        pass
+    print(f"Loaded model from: {found_model}")
+
+# Load class names after model is successfully loaded
+try:
+    with open(CLASS_PATH, 'r', encoding='utf-8') as f:
+        class_names = [line.strip() for line in f if line.strip()]
+except Exception as e:
+    print(f"Error loading class names from {CLASS_PATH}: {e}", file=sys.stderr)
+    sys.exit(1)
+else:
     print(f"Loaded model from: {found_model}")
 
 def analyze_image(image_path, grams=100):
@@ -80,7 +93,13 @@ def analyze_image(image_path, grams=100):
 
         # Make prediction
         pred = model.predict(img_array, verbose=0)
-        predicted_class = class_names[np.argmax(pred)]
+        print(f"[DEBUG] prediction shape={pred.shape}, values={pred.flatten()[:5]}")
+
+        class_index = int(np.argmax(pred))
+        if class_index >= len(class_names):
+            raise ValueError(f"predicted class index {class_index} out of range for {len(class_names)} class names")
+
+        predicted_class = class_names[class_index]
         confidence = float(np.max(pred))
 
         # Get nutrition info
@@ -104,6 +123,7 @@ def analyze_image(image_path, grams=100):
                 "error": "Nutrition data not found for this food"
             }
     except Exception as e:
+        traceback.print_exc()
         return {"error": f"Analysis failed: {str(e)}"}
 
 def main():

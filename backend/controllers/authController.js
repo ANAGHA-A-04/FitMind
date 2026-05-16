@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const UserStats = require('../models/userStats');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
@@ -47,8 +48,32 @@ exports.register = async (req, res) => {
             goal
         });
 
+        // 🆕 Create UserStats for new user
+        const userStats = await UserStats.create({
+            userId: user._id,
+            currentLevel: 0,
+            totalXP: 0,
+            averageCompletionPercentage: 0,
+            totalCompletions: 0,
+            lastCompletionDate: new Date(),
+        });
+
+        console.log("✅ UserStats created for new user:", userStats._id);
+
         // Generate token
         const token = generateToken(user._id);
+
+        console.log("\n" + "=".repeat(50));
+        console.log("📝 REGISTER RESPONSE DEBUG");
+        console.log("=".repeat(50));
+        console.log("MongoDB User Object:");
+        console.log("  _id:", user._id);
+        console.log("  _id type:", typeof user._id);
+        console.log("  _id toString:", user._id.toString());
+        console.log("\nSending in response:");
+        const responseUserId = user._id;
+        console.log("  id: " + responseUserId + " (will be sent as 'id')");
+        console.log("=".repeat(50) + "\n");
 
         // Send response
         res.status(201).json({
@@ -125,6 +150,18 @@ exports.login = async (req, res) => {
 
         // Generate token
         const token = generateToken(user._id);
+
+        console.log("\n" + "=".repeat(50));
+        console.log("🔐 LOGIN RESPONSE DEBUG");
+        console.log("=".repeat(50));
+        console.log("MongoDB User Object:");
+        console.log("  _id:", user._id);
+        console.log("  _id type:", typeof user._id);
+        console.log("  _id toString:", user._id.toString());
+        console.log("\nSending in response:");
+        const responseUserId = user._id;
+        console.log("  id: " + responseUserId + " (will be sent as 'id')");
+        console.log("=".repeat(50) + "\n");
 
         // Send response
         res.status(200).json({

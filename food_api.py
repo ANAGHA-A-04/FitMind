@@ -28,6 +28,10 @@ def analyze():
     total = time.time() - start
     print("⏱ Total API time:", total)
 
+    if isinstance(result, dict) and result.get("error"):
+        print(f"[ERROR] analyze_image returned error: {result['error']}")
+        return jsonify(result), 500
+
     return jsonify(result)
 
 
@@ -52,6 +56,25 @@ def manual_food():
         "carbs": 20
     })
 
+@app.route('/save_diet_score', methods=['POST'])
+def save_diet_score():
+    data = request.json
+    try:
+        user_id = data['userId']
+        level_id = data['levelId']
+        diet_score = data['dietScore']
 
+        print(f"Saving diet score: user={user_id}, level={level_id}, score={diet_score}")
+
+        return jsonify({
+            "status": "success",
+            "message": "Diet score saved successfully"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        })
+    
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    app.run(host="0.0.0.0", port=5003, debug=True)

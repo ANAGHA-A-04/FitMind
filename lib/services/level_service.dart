@@ -1,6 +1,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LevelService {
+  static const String baseUrl = "http://192.168.43.12:5002";
 
   Future<void> addXP(int xp) async {
     final prefs = await SharedPreferences.getInstance();
@@ -10,8 +13,8 @@ class LevelService {
 
     currentXP += xp;
 
-    if (currentXP >= 100 && level == 1) {
-      level = 2; // level 1 completed
+    if (currentXP >= 100 && level == 0) {
+      level = 1; // level 0 completed
     }
 
     await prefs.setInt("xp", currentXP);
@@ -53,4 +56,57 @@ class LevelService {
     int current = prefs.getInt("activeLevel") ?? 0;
     await prefs.setInt("activeLevel", current + 1);
   }
-}
+   static int wellnessScoreFromLabel(String label) {
+    switch (label.toLowerCase()) {
+      case 'stressed overworker':
+        return 35;
+      case 'sedentary/relaxed':
+        return 70;
+      case 'high-energy achiever':
+        return 90;
+      default:
+        return 50;
+    }
+  }
+
+  static Future<bool> saveWellnessScoreToBackend({
+    required int userId,
+    required int levelId,
+    required int wellnessScore,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/save_wellness_score"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "userId": userId,
+          "levelId": levelId,
+          "wellnessScore": wellnessScore,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<void> saveWellnessScoreLocally({
+    required int levelId,
+    required int wellnessScore,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt("wellness_score_$levelId", wellnessScore);
+    await prefs.setBool("wellness_done_$levelId", true);
+  }
+
+  static Future<int?> getWellnessScoreForLevel(int levelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt("wellness_score_$levelId");
+  }
+
+  static Future<bool> isWellnessDone(int levelId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool("wellness_done_$levelId") ?? false;
+  }
+}

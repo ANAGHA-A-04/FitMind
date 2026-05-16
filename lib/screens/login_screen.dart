@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
 import 'wellness_journey_map.dart';
@@ -140,13 +143,40 @@ class LoginScreen extends StatelessWidget {
                             ),
                           );
 
+                          // 🔄 Restore user progress from backend
+                          try {
+                            final prefs = await SharedPreferences.getInstance();
+                            final userId = prefs.getString('userId') ?? '';
+                            
+                            if (userId.isNotEmpty) {
+                              final response = await http.get(
+                                Uri.parse('http://192.168.43.12:5000/api/tasks/stats/$userId'),
+                              );
+                              
+                              if (response.statusCode == 200) {
+                                final data = jsonDecode(response.body);
+                                final currentLevel = data['currentLevel'] ?? 0;
+                                final completedLevels = List<String>.from(data['completedLevels'] ?? []);
+                                
+                                await prefs.setInt('activeLevel', currentLevel);
+                                await prefs.setStringList('completedLevels', completedLevels);
+                                
+                                print('✅ Progress restored: Level $currentLevel, Completed: ${completedLevels.length} levels');
+                              }
+                            }
+                          } catch (e) {
+                            print('⚠️ Could not restore progress: $e');
+                          }
+
                           // Navigate to Wellness Journey Map
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context)=> const WellnessJourneyMap(),
-                            ),
-                          );
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context)=> const WellnessJourneyMap(),
+                              ),
+                            );
+                          }
                         }
                       } else {
                         // Show error message

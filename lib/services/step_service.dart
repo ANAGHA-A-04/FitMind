@@ -1,4 +1,4 @@
-import 'package:pedometer/pedometer.dart';
+/*import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
@@ -32,4 +32,4 @@ class StepService {
   void stopStepCounter() {
     _stepSubscription?.cancel();
   }
-}
+}*/

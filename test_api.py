@@ -1,7 +1,7 @@
 import requests
 
 # Test the food analysis API
-url = "http://10.184.213.220:5002/api/food/analyze"
+url = "http://10.96.114.12:5002/api/food/analyze"
 image_path = "pizza.jpg"
 
 with open(image_path, 'rb') as f:
