@@ -98,6 +98,17 @@ class FoodScanPage extends StatelessWidget {
                           }
                         },
                       ),
+                      const SizedBox(height: 16),
+                      _buildActionButton(
+                        icon: Icons.collections,
+                        label: "Upload Multiple Photos",
+                        onTap: () async {
+                          final images = await picker.pickMultiImage();
+                          if (images.isNotEmpty) {
+                            await _handleMultipleImages(context, images);
+                          }
+                        },
+                      ),
                       const SizedBox(height: 24),
                       Row(
                         children: [
@@ -187,7 +198,7 @@ class FoodScanPage extends StatelessWidget {
   }
 
   Future<void> _handleImage(BuildContext context, String path) async {
-    final quantity = await _askQuantity(context);
+    final quantity = await _askQuantity(context, title: "Enter Quantity (grams)");
     if (quantity == null) return;
 
     _showLoading(context);
@@ -217,6 +228,57 @@ class FoodScanPage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) _showError(context);
+    }
+  }
+
+  Future<void> _handleMultipleImages(BuildContext context, List<XFile> images) async {
+    final items = <FoodItemResult>[];
+
+    for (int i = 0; i < images.length; i++) {
+      final image = images[i];
+      final quantity = await _askQuantity(
+        context,
+        title: "Enter Quantity (grams) for photo ${i + 1}",
+      );
+      if (quantity == null) {
+        return;
+      }
+
+      _showLoading(context);
+
+      try {
+        final result = await FoodService.analyzeFood(image.path);
+
+        if (context.mounted) Navigator.pop(context);
+
+        items.add(
+          FoodItemResult(
+            imagePath: image.path,
+            resultData: result,
+            quantity: quantity,
+          ),
+        );
+      } catch (e) {
+        if (context.mounted) Navigator.pop(context);
+        if (context.mounted) _showError(context);
+        return;
+      }
+    }
+
+    if (items.isEmpty || !context.mounted) return;
+
+    final done = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FoodResultPage(
+          items: items,
+          levelId: levelId,
+        ),
+      ),
+    );
+
+    if (done == true && context.mounted) {
+      Navigator.pop(context, true);
     }
   }
 
@@ -259,7 +321,10 @@ class FoodScanPage extends StatelessWidget {
 
               Navigator.pop(context);
 
-              final quantity = await _askQuantity(context);
+              final quantity = await _askQuantity(
+                context,
+                title: "Enter Quantity (grams)",
+              );
               if (quantity == null) return;
 
               if (context.mounted) _showLoading(context);
@@ -298,15 +363,15 @@ class FoodScanPage extends StatelessWidget {
     );
   }
 
-  Future<double?> _askQuantity(BuildContext context) async {
+  Future<double?> _askQuantity(BuildContext context, {required String title}) async {
     final controller = TextEditingController();
 
     return showDialog<double>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text(
-          "Enter Quantity (grams)",
+        title: Text(
+          title,
           style: TextStyle(color: Colors.white),
         ),
         content: TextField(

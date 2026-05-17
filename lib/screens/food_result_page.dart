@@ -2,17 +2,31 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/food_service.dart';
 
-class FoodResultPage extends StatefulWidget {
+class FoodItemResult {
   final String imagePath;
-  final double quantity;
   final Map<String, dynamic> resultData;
+  final double quantity;
+
+  const FoodItemResult({
+    required this.imagePath,
+    required this.resultData,
+    required this.quantity,
+  });
+}
+
+class FoodResultPage extends StatefulWidget {
+  final String? imagePath;
+  final double? quantity;
+  final Map<String, dynamic>? resultData;
+  final List<FoodItemResult>? items;
   final int levelId;
 
   const FoodResultPage({
     super.key,
-    required this.imagePath,
-    required this.resultData,
-    required this.quantity,
+    this.imagePath,
+    this.resultData,
+    this.quantity,
+    this.items,
     required this.levelId,
   });
 
@@ -24,11 +38,57 @@ class _FoodResultPageState extends State<FoodResultPage> {
   bool isSaving = false;
   bool isSaved = false;
   late int dietScore;
+  double totalCalories = 0;
+  double totalProtein = 0;
+  double totalCarbs = 0;
+  double totalFat = 0;
+  double totalFiber = 0;
 
   @override
   void initState() {
     super.initState();
-    dietScore = FoodService.calculateDietScore(widget.resultData, widget.quantity);
+    if (widget.items != null && widget.items!.isNotEmpty) {
+      _computeTotals();
+    } else if (widget.resultData != null && widget.quantity != null) {
+      dietScore = FoodService.calculateDietScore(widget.resultData!, widget.quantity!);
+      _computeTotalsForSingle();
+    } else {
+      dietScore = 50;
+    }
+  }
+
+  void _computeTotalsForSingle() {
+    final data = widget.resultData!;
+    final factor = widget.quantity! / 100;
+    totalCalories = (data["calories"] ?? 0) * factor;
+    totalProtein = (data["protein"] ?? 0) * factor;
+    totalCarbs = (data["carbs"] ?? 0) * factor;
+    totalFat = (data["fat"] ?? 0) * factor;
+    totalFiber = (data["fiber"] ?? 0) * factor;
+  }
+
+  void _computeTotals() {
+    double scoreSum = 0;
+    double weightSum = 0;
+    for (final item in widget.items!) {
+      final data = item.resultData;
+      final factor = item.quantity / 100;
+      totalCalories += (data["calories"] ?? 0) * factor;
+      totalProtein += (data["protein"] ?? 0) * factor;
+      totalCarbs += (data["carbs"] ?? 0) * factor;
+      totalFat += (data["fat"] ?? 0) * factor;
+      totalFiber += (data["fiber"] ?? 0) * factor;
+
+      final score = FoodService.calculateDietScore(data, item.quantity);
+      scoreSum += score * item.quantity;
+      weightSum += item.quantity;
+    }
+
+    if (weightSum > 0) {
+      dietScore = (scoreSum / weightSum).round();
+    } else {
+      dietScore = 50;
+    }
   }
 
   Future<void> _completeDietCheckin() async {
@@ -57,14 +117,8 @@ class _FoodResultPageState extends State<FoodResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMulti = widget.items != null && widget.items!.isNotEmpty;
     final data = widget.resultData;
-    final factor = widget.quantity / 100;
-
-    final calories = (data["calories"] ?? 0) * factor;
-    final protein = (data["protein"] ?? 0) * factor;
-    final carbs = (data["carbs"] ?? 0) * factor;
-    final fat = (data["fat"] ?? 0) * factor;
-    final fiber = (data["fiber"] ?? 0) * factor;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -84,14 +138,14 @@ class _FoodResultPageState extends State<FoodResultPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            widget.imagePath.isNotEmpty
+            (widget.imagePath != null && widget.imagePath!.isNotEmpty)
                 ? ClipRRect(
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
                     child: Image.file(
-                      File(widget.imagePath),
+                      File(widget.imagePath!),
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -121,7 +175,9 @@ class _FoodResultPageState extends State<FoodResultPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          data["food"].toString().toUpperCase(),
+                          isMulti
+                              ? "MEAL SUMMARY"
+                              : data!["food"].toString().toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -131,7 +187,9 @@ class _FoodResultPageState extends State<FoodResultPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "${widget.quantity.toStringAsFixed(0)} g",
+                          isMulti
+                              ? "${widget.items!.length} items"
+                              : "${widget.quantity!.toStringAsFixed(0)} g",
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 12,
@@ -159,7 +217,7 @@ class _FoodResultPageState extends State<FoodResultPage> {
                           ),
                         ),
                         Text(
-                          "${calories.toStringAsFixed(0)}",
+                          "${totalCalories.toStringAsFixed(0)}",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -201,13 +259,76 @@ class _FoodResultPageState extends State<FoodResultPage> {
                 mainAxisSpacing: 12,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _nutritionCard("Protein", protein, Colors.green),
-                  _nutritionCard("Carbs", carbs, Colors.lightGreen),
-                  _nutritionCard("Fat", fat, Colors.teal),
-                  _nutritionCard("Fiber", fiber, Colors.lime),
+                  _nutritionCard("Protein", totalProtein, Colors.green),
+                  _nutritionCard("Carbs", totalCarbs, Colors.lightGreen),
+                  _nutritionCard("Fat", totalFat, Colors.teal),
+                  _nutritionCard("Fiber", totalFiber, Colors.lime),
                 ],
               ),
             ),
+            if (isMulti) const SizedBox(height: 12),
+            if (isMulti)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: widget.items!
+                      .map(
+                        (item) => Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[900],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(item.imagePath),
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.resultData["food"].toString().toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "${item.quantity.toStringAsFixed(0)} g",
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                "${((item.resultData["calories"] ?? 0) * (item.quantity / 100)).toStringAsFixed(0)} kcal",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
