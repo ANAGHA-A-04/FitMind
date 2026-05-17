@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LevelService {
-  static const String baseUrl = "http://10.184.213.220:5002";
+  static const String baseUrl = "http://192.168.43.12:5002";
 
   Future<void> addXP(int xp) async {
     final prefs = await SharedPreferences.getInstance();
