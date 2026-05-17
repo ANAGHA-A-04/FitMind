@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 from datetime import datetime
+import random
 
 # Load .env file from the same directory as app.py
 load_dotenv()
@@ -47,7 +48,27 @@ except Exception as e:
 # Adaptive Task Builder (Enhanced)
 # =========================
 
-def build_tasks(goal, wellness_score, diet_score, level=1, completion_percentage=100):
+def _clamp(value, min_value, max_value):
+    return max(min_value, min(value, max_value))
+
+
+def _daily_seed(user_id, level):
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    return f"{user_id}-{level}-{today}"
+
+
+def build_tasks(
+    goal,
+    wellness_score,
+    diet_score,
+    level=1,
+    completion_percentage=100,
+    last_completion=None,
+    last_wellness=None,
+    last_diet=None,
+    lifestyle_cluster=None,
+    user_id=None,
+):
     """
     Build adaptive tasks based on:
     - goal: User's fitness goal
@@ -58,6 +79,17 @@ def build_tasks(goal, wellness_score, diet_score, level=1, completion_percentage
     """
     
     tasks = []
+
+    # Normalize optional inputs
+    if last_completion is None:
+        last_completion = completion_percentage
+
+    wellness_trend = 0
+    diet_trend = 0
+    if last_wellness is not None:
+        wellness_trend = wellness_score - last_wellness
+    if last_diet is not None:
+        diet_trend = diet_score - last_diet
     
     # =========================
     # DIFFICULTY SCALING
@@ -66,14 +98,14 @@ def build_tasks(goal, wellness_score, diet_score, level=1, completion_percentage
     # If user completed <40% last level, reduce difficulty
     # If user completed >70% last level, increase difficulty
     difficulty_modifier = 1.0
-    
-    if completion_percentage < 40:
+
+    if last_completion < 40:
         difficulty_modifier = 0.7  # Reduce difficulty by 30%
-    elif completion_percentage > 70:
-        difficulty_modifier = 1.3 + (level * 0.1)  # Increase by 30% + level scaling
-    
+    elif last_completion > 70:
+        difficulty_modifier = 1.2  # Increase by 20%
+
     # Level-based difficulty scaling
-    level_factor = 1.0 + (level * 0.15)
+    level_factor = 1.0 + (level * 0.12)
     final_difficulty = difficulty_modifier * level_factor
     
     print(f"\n📊 DIFFICULTY ANALYSIS:")
@@ -86,157 +118,202 @@ def build_tasks(goal, wellness_score, diet_score, level=1, completion_percentage
     # STEP TARGET SCALING
     # =========================
     
-    base_steps = 6000
-    steps_target = int(base_steps * final_difficulty)
-    
-    minutes_target = 10
-    if completion_percentage > 70:
-        minutes_target = int(minutes_target * 1.2 + level)
-    
+    base_steps = 5000
+    steps_target = _clamp(int(base_steps * final_difficulty), 3500, 14000)
+
+    minutes_target = _clamp(int(10 * final_difficulty), 8, 35)
     water_target = 8
     if wellness_score > 70:
-        water_target = 12
+        water_target = 10
+    if diet_score < 40:
+        water_target = max(water_target, 9)
+
+    pushups_target = _clamp(int(10 * final_difficulty), 6, 40)
+    squats_target = _clamp(int(15 * final_difficulty), 10, 60)
+    plank_seconds = _clamp(int(30 * final_difficulty), 20, 120)
+    jog_minutes = _clamp(int(8 * final_difficulty), 6, 25)
     
     # =========================
     # TASK GENERATION BASED ON GOAL
     # =========================
 
+    rng_seed = _daily_seed(user_id or "user", level)
+    rng = random.Random(rng_seed)
+
+    # Task pools by domain
+    physical_low = [
+        f"Walk {steps_target} steps today.",
+        f"Do {minutes_target} minutes of light stretching.",
+        "Do 5 minutes of mobility work.",
+        f"Do {pushups_target} wall pushups.",
+        "Do 8 chair squats.",
+        "Do a 5-minute warm-up walk after meals.",
+        "Do 5 minutes of gentle yoga.",
+        "Do 10 calf raises.",
+    ]
+    physical_mid = [
+        f"Do {pushups_target} pushups.",
+        f"Do {squats_target} squats.",
+        f"Jog for {jog_minutes} minutes.",
+        f"Complete {minutes_target} minutes of brisk walking.",
+        f"Hold a plank for {plank_seconds} seconds.",
+        "Do 12 lunges per leg.",
+        "Do a 10-minute bodyweight circuit.",
+        "Do 3 sets of 12 glute bridges.",
+        "Do 2 sets of 20 high knees.",
+        "Do 3 sets of 10 mountain climbers.",
+    ]
+    physical_high = [
+        f"Do {pushups_target + 10} pushups.",
+        f"Do {squats_target + 15} squats.",
+        f"Complete {minutes_target + 10} minutes of workout.",
+        f"Do a {plank_seconds + 30}-second plank and 3 sets of crunches.",
+        "Do 20 jumping jacks and 10 pushups.",
+        "Do a 12-minute HIIT session.",
+        "Do 3 sets of burpees (8 reps each).",
+        "Do 3 sets of 15 jump squats.",
+        "Do 3 sets of 12 tricep dips.",
+        "Run or cycle hard for 12 minutes.",
+    ]
+
+    mental_low = [
+        "Do 5 minutes of mindful breathing.",
+        "Write 3 lines in a journal.",
+        "Take a 10-minute screen break.",
+        "Do a 5-minute body scan relaxation.",
+    ]
+    mental_mid = [
+        "Do a 10-minute meditation.",
+        "Practice gratitude: list 5 things.",
+        "Do 10 minutes of stretching or yoga.",
+    ]
+    mental_high = [
+        "Do a 15-minute mindfulness session.",
+        "Take a 20-minute walk without phone.",
+        "Spend 10 minutes on focused breathing and posture reset.",
+    ]
+
+    diet_low = [
+        f"Drink {water_target} glasses of water.",
+        "Add 1 serving of vegetables to a meal.",
+        "Avoid sugary drinks today.",
+        "Choose a balanced plate for one meal.",
+    ]
+    diet_mid = [
+        f"Drink {water_target} glasses of water.",
+        "Include a lean protein source today.",
+        "Add one high-fiber snack (5g+ fiber).",
+    ]
+    diet_high = [
+        f"Drink {water_target + 1} glasses of water.",
+        "Include 2 different colored vegetables today.",
+        "Keep portions controlled and avoid late-night snacking.",
+    ]
+
+    # Goal-specific nudges
     if goal == "reduce weight":
-        # Wellness tasks
-        if wellness_score < 40:  # Stressed/Low
-            tasks += [
-                f"Do 10 minutes of breathing exercise.",
-                "Sleep before 11 PM tonight.",
-                "Do 10 minutes of light stretching.",
-                f"Walk at least {steps_target} steps."
-            ]
-        elif wellness_score < 70:  # Balanced
-            tasks += [
-                f"Maintain a {steps_target} step target.",
-                "Go for a 15-minute jog.",
-                f"Do {minutes_target} minutes of light cardio."
-            ]
-        else:  # Active/High
-            tasks += [
-                f"Hit {steps_target + 1000} step challenge today.",
-                "Do 20 minutes of intense workout.",
-                "Complete a 15-minute HIIT session.",
-                f"Complete {minutes_target + 5} minutes of strength training."
-            ]
-        
-        # Diet tasks
-        if diet_score < 40:  # Poor diet
-            tasks += [
-                "Choose a low-calorie meal under 300 calories.",
-                "Avoid fried food today.",
-                "Drink water before meals."
-            ]
-        elif diet_score < 70:  # Moderate diet
-            tasks += [
-                "Keep portion sizes controlled.",
-                "Add one high-fiber snack (at least 5g fiber).",
-                f"Drink {water_target} glasses of water."
-            ]
-        else:  # Good diet
-            tasks += [
-                "Maintain calorie deficit (under 2000 cal).",
-                "Add 2 servings of vegetables.",
-                f"Drink {water_target + 2} glasses of water."
-            ]
-
-    # MAINTAIN FITNESS
-    elif goal == "maintain fitness":
-        if wellness_score < 40:
-            tasks += [
-                "Take a short walk after lunch.",
-                "Do 5 minutes of mindful breathing.",
-                f"Walk {steps_target - 1000} steps."
-            ]
-        elif wellness_score < 70:
-            tasks += [
-                f"Maintain {steps_target} step consistency.",
-                f"Exercise for {minutes_target} minutes.",
-                "Do 15 minutes of bodyweight exercises (squats, lunges).",
-                "Do light stretching or yoga."
-            ]
-        else:
-            tasks += [
-                f"Hit {steps_target + 1500} steps.",
-                f"Complete {minutes_target + 10} minutes of structured workout.",
-                "Do a 10-minute core workout.",
-                "Do 20 jumping jacks and 10 pushups.",
-                "Try a new physical activity."
-            ]
-        
-        if diet_score < 40:
-            tasks += [
-                "Replace one meal with a balanced plate.",
-                "Add vegetables to lunch or dinner.",
-                f"Drink {water_target} glasses of water."
-            ]
-        elif diet_score < 70:
-            tasks += [
-                "Keep protein and carbs balanced (30/40 ratio).",
-                "Stay hydrated throughout the day.",
-                "Add one lean protein source."
-            ]
-        else:
-            tasks += [
-                "Maintain clean eating streak.",
-                "Include 3 different colored vegetables today.",
-                f"Drink {water_target} glasses of water."
-            ]
-
-    # INCREASE WEIGHT
+        diet_low.append("Choose a low-calorie meal under 350 calories.")
+        diet_mid.append("Maintain a calorie deficit for one meal.")
+        diet_high.append("Keep daily calories under your target.")
     elif goal == "increase weight":
-        if wellness_score < 40:
-            tasks += [
-                "Prioritize rest and sleep (8+ hours).",
-                "Do light activity only today.",
-                "Do 5 minutes of mobility exercises.",
-                "Avoid intense workouts."
-            ]
-        elif wellness_score < 70:
-            tasks += [
-                "Maintain light exercise and recovery.",
-                "Do 3 sets of 10 pushups.",
-                "Keep stress under control.",
-                f"Walk {int(steps_target * 0.5)} steps for circulation."
-            ]
-        else:
-            tasks += [
-                f"Do {minutes_target} minutes of strength training.",
-                f"Hit {int(steps_target * 0.7)} step target.",
-                "Perform 4 sets of compound lifts (squats/deadlifts).",
-                "Do progressive resistance exercises."
-            ]
-        
-        if diet_score < 40:
-            tasks += [
-                "Eat one extra meal or snack (500+ cal).",
-                "Include calorie-dense foods (nuts, banana, olive oil).",
-                "Add protein with each meal (20g+ per meal)."
-            ]
-        elif diet_score < 70:
-            tasks += [
-                "Continue calorie surplus plan (+300 cal/day).",
-                "Include a protein shake or snack (30g protein).",
-                f"Drink {water_target} glasses of water."
-            ]
-        else:
-            tasks += [
-                "Maintain aggressive calorie surplus (+500 cal/day).",
-                "Include 2 high-calorie snacks per day.",
-                f"Consume 2g protein per kg of body weight."
-            ]
-
-    # DEFAULT/FALLBACK
+        diet_low.append("Add one extra snack with protein.")
+        diet_mid.append("Add 300 calories through healthy foods.")
+        diet_high.append("Include a calorie-dense snack (nuts, yogurt).")
     else:
-        tasks += [
-            f"Drink {water_target} glasses of water.",
-            f"Walk {steps_target} steps.",
-            "Maintain a balanced meal."
+        diet_mid.append("Balance carbs and protein in one meal.")
+
+    goal_physical = []
+    goal_diet = []
+    if goal == "reduce weight":
+        goal_physical = [
+            "Do a 20-minute fat-burn walk.",
+            "Complete a 12-minute cardio circuit.",
+            "Do 3 rounds: 20 squats, 15 lunges, 20 jumping jacks.",
         ]
+        goal_diet = [
+            "Keep dinner light and high-protein.",
+            "Avoid sugary snacks today.",
+        ]
+    elif goal == "increase weight":
+        goal_physical = [
+            "Do 3 sets of slow pushups (8 reps each).",
+            "Do 3 sets of controlled squats (10 reps each).",
+            "Do 10 minutes of strength-focused bodyweight work.",
+        ]
+        goal_diet = [
+            "Add one calorie-dense snack (nuts, peanut butter).",
+            "Include protein at every meal (20g+).",
+        ]
+    else:
+        goal_physical = [
+            "Do a 15-minute mixed workout (cardio + strength).",
+            "Do a 10-minute core routine.",
+        ]
+        goal_diet = [
+            "Keep meals balanced: protein + fiber + healthy fat.",
+        ]
+
+    # Decide intensity buckets
+    if wellness_score < 40:
+        physical_pool = physical_low
+        mental_pool = mental_high
+    elif wellness_score < 70:
+        physical_pool = physical_mid
+        mental_pool = mental_mid
+    else:
+        physical_pool = physical_high
+        mental_pool = mental_mid
+
+    if diet_score < 40:
+        diet_pool = diet_low
+    elif diet_score < 70:
+        diet_pool = diet_mid
+    else:
+        diet_pool = diet_high
+
+    # Adjust counts based on trends
+    physical_count = 3
+    mental_count = 2
+    diet_count = 2
+
+    if goal == "reduce weight":
+        physical_count += 1
+        diet_count += 1
+    elif goal == "increase weight":
+        diet_count += 1
+    else:
+        physical_count = max(3, physical_count)
+
+    if wellness_score < 40:
+        mental_count = 3
+        physical_count = 1
+    if wellness_trend < -10:
+        mental_count += 1
+        physical_count = max(1, physical_count - 1)
+
+    if diet_trend < -10:
+        diet_count += 1
+
+    # Add small variety boost if completion was high
+    if last_completion > 80:
+        physical_count += 1
+
+    # Pick tasks without duplicates
+    tasks += rng.sample(physical_pool, min(physical_count, len(physical_pool)))
+    tasks += rng.sample(mental_pool, min(mental_count, len(mental_pool)))
+    tasks += rng.sample(diet_pool, min(diet_count, len(diet_pool)))
+
+    if goal_physical:
+        tasks.append(rng.choice(goal_physical))
+    if goal_diet:
+        tasks.append(rng.choice(goal_diet))
+
+    # Cluster-based adjustment (optional, if provided)
+    if lifestyle_cluster:
+        if "sedentary" in lifestyle_cluster.lower():
+            tasks.append("Stand and stretch for 3 minutes every hour.")
+        elif "high-energy" in lifestyle_cluster.lower():
+            tasks.append("Add a short burst: 5 x 30-second fast steps.")
 
     # Remove duplicates while preserving order
     seen = set()
@@ -282,6 +359,7 @@ def generate_tasks():
         diet_score = data.get("dietScore")
         previous_level = data.get("previousLevel", 1)
         previous_completion = data.get("previousCompletion", 100)
+        lifestyle_cluster = data.get("lifestyleCluster")
 
         print("🔍 Extracted fields:")
         print(f"  userId: '{user_id}' (type: {type(user_id)}, len: {len(str(user_id)) if user_id else 'NULL'})")
@@ -409,12 +487,35 @@ def generate_tasks():
         # Generate Tasks
         # -------------------------
 
+        # -------------------------
+        # Fetch recent completion history
+        # -------------------------
+        last_completion = None
+        last_wellness = None
+        last_diet = None
+
+        try:
+            recent = list(
+                db.completions.find({"userId": object_user_id}).sort("createdAt", -1).limit(2)
+            )
+            if recent:
+                last_completion = recent[0].get("completionPercentage")
+                last_wellness = recent[0].get("wellnessScore")
+                last_diet = recent[0].get("dietScore")
+        except Exception as e:
+            print(f"⚠️ Failed to fetch recent completions: {e}")
+
         tasks = build_tasks(
             goal,
             wellness_score,
             diet_score,
             level=previous_level,
-            completion_percentage=previous_completion
+            completion_percentage=previous_completion,
+            last_completion=last_completion,
+            last_wellness=last_wellness,
+            last_diet=last_diet,
+            lifestyle_cluster=lifestyle_cluster,
+            user_id=str(user_id),
         )
 
         print("✅ Generated Tasks:", tasks)

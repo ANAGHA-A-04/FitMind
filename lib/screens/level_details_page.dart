@@ -124,8 +124,6 @@ class _LevelDetailsPageState extends State<LevelDetailsPage>
       wellnessScore: score,
     );
 
-    await LevelService.unlockNextLevel();
-
     _animController.forward();
   }
 

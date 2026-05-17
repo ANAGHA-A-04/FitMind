@@ -101,7 +101,7 @@ exports.completeLevel = async (req, res) => {
     let nextLevelTasks = [];
 
     try {
-      const adaptiveUrl = process.env.ADAPTIVE_ENGINE_URL || 'http://192.168.43.12:5004';
+      const adaptiveUrl = process.env.ADAPTIVE_ENGINE_URL || 'http://10.96.114.12:5004';
 
       adaptiveResponse = await axios.post(`${adaptiveUrl}/generate_tasks`, {
         userId,

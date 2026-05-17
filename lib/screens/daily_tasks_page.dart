@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/task_service.dart';
+import '../services/level_service.dart';
 
 import 'wellness_journey_map.dart';
 
@@ -161,14 +162,18 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
       final completion = response['completion'];
       final completionPercent = completion['completionPercentage'];
       final xpEarned = completion['xpEarned'];
-      final userStats = response['userStats'];
-      final nextLevel = userStats['currentLevel']; // Use backend's level
+      final nextLevel = widget.currentLevel + 1;
 
       // Mark this level as completed locally
       final prefs = await SharedPreferences.getInstance();
       final completedLevels = prefs.getStringList('completedLevels') ?? [];
-      completedLevels.add('${widget.currentLevel}');
-      await prefs.setStringList('completedLevels', completedLevels);
+      if (!completedLevels.contains('${widget.currentLevel}')) {
+        completedLevels.add('${widget.currentLevel}');
+        await prefs.setStringList('completedLevels', completedLevels);
+      }
+
+      // Unlock only the immediate next level on the journey map
+      await LevelService.setActiveLevel(nextLevel);
 
       if (!mounted) return;
 
@@ -182,18 +187,15 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
         ),
       );
 
-      // Navigate back to journey map
-      Future.delayed(const Duration(seconds: 3), () {
+      // Navigate to Wellness Journey Map (clear entire navigation stack)
+      Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
         
-        // Pop current and previous screens
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        
-        // Go back to Journey Map
-        Navigator.of(context).push(
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (_) => const WellnessJourneyMap(),
           ),
+          (route) => false, // Remove all previous routes
         );
       });
     } else {

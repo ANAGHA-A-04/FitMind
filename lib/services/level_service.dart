@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LevelService {
-  static const String baseUrl = "http://192.168.43.12:5002";
+  static const String baseUrl = "http://10.184.213.12:5002";
 
   Future<void> addXP(int xp) async {
     final prefs = await SharedPreferences.getInstance();
@@ -51,10 +51,12 @@ class LevelService {
     return prefs.getInt("activeLevel") ?? 0; // Starts at Level 0
   }
 
-  static Future<void> unlockNextLevel() async {
+  static Future<void> setActiveLevel(int nextLevel) async {
     final prefs = await SharedPreferences.getInstance();
     int current = prefs.getInt("activeLevel") ?? 0;
-    await prefs.setInt("activeLevel", current + 1);
+    if (nextLevel > current) {
+      await prefs.setInt("activeLevel", nextLevel);
+    }
   }
    static int wellnessScoreFromLabel(String label) {
     switch (label.toLowerCase()) {

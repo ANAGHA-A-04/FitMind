@@ -20,6 +20,7 @@ class LevelOptionPage extends StatefulWidget {
 class _LevelOptionPageState extends State<LevelOptionPage> {
   bool wellnessDone = false;
   bool dietDone = false;
+  bool isLevelCompleted = false;
 
   int? wellnessScore;
   int? dietScore;
@@ -30,6 +31,27 @@ class _LevelOptionPageState extends State<LevelOptionPage> {
   void initState() {
     super.initState();
     _loadData();
+    _checkIfLevelCompleted();
+  }
+
+  Future<void> _checkIfLevelCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completedLevels = prefs.getStringList('completedLevels') ?? [];
+    
+    if (completedLevels.contains('${widget.level}')) {
+      if (mounted) {
+        setState(() => isLevelCompleted = true);
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => LevelOptionPage(level: widget.level + 1),
+              ),
+            );
+          }
+        });
+      }
+    }
   }
 
   Future<String> _getCurrentUserId() async {
@@ -77,6 +99,17 @@ class _LevelOptionPageState extends State<LevelOptionPage> {
   }
 
   Future<void> _openWellness() async {
+    if (wellnessDone) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Wellness check-in already completed for this level"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -90,6 +123,17 @@ class _LevelOptionPageState extends State<LevelOptionPage> {
   }
 
   Future<void> _openDiet() async {
+    if (dietDone) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Diet check-in already completed for this level"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -186,6 +230,59 @@ class _LevelOptionPageState extends State<LevelOptionPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLevelCompleted) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: Text("Level ${widget.level}"),
+          backgroundColor: Colors.transparent,
+        ),
+        body: Center(
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(30),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 80,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "🎉 Level Complete!",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Unlocking Level ${widget.level + 1}...",
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                const CircularProgressIndicator(
+                  color: Colors.greenAccent,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(

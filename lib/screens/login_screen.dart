@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
+import '../services/task_service.dart';
+import '../services/level_service.dart';
 import 'wellness_journey_map.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -147,20 +147,17 @@ class LoginScreen extends StatelessWidget {
                           try {
                             final prefs = await SharedPreferences.getInstance();
                             final userId = prefs.getString('userId') ?? '';
-                            
+
                             if (userId.isNotEmpty) {
-                              final response = await http.get(
-                                Uri.parse('http://192.168.43.12:5000/api/tasks/stats/$userId'),
-                              );
-                              
-                              if (response.statusCode == 200) {
-                                final data = jsonDecode(response.body);
+                              final data = await TaskService.getUserStats(userId);
+
+                              if (data['success'] == true) {
                                 final currentLevel = data['currentLevel'] ?? 0;
                                 final completedLevels = List<String>.from(data['completedLevels'] ?? []);
-                                
-                                await prefs.setInt('activeLevel', currentLevel);
+
+                                await LevelService.setActiveLevel(currentLevel);
                                 await prefs.setStringList('completedLevels', completedLevels);
-                                
+
                                 print('✅ Progress restored: Level $currentLevel, Completed: ${completedLevels.length} levels');
                               }
                             }

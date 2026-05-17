@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   // Change this to your computer's local IP when testing on physical device
   // For emulator, use: Android - 10.0.2.2, iOS - localhost
-  static const String baseUrl = 'http://10.184.213.220:5000/api';
+  static const String baseUrl = 'http://10.184.213.12:5000/api';
 
 // Register new user
   static Future<Map<String, dynamic>> register({
@@ -178,6 +178,7 @@ class AuthService {
     await prefs.remove('xp');
     await prefs.remove('level');
     await prefs.remove('lastCheckInDate');
+    await prefs.remove('completedLevels');  // 🆕 Clear completed levels too!
     
     // Wellness check data (clear all levels)
     for (int i = 0; i <= 10; i++) {
